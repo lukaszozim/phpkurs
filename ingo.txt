@@ -1,2 +1,0 @@
-Zip;
-projekt w takiej formie można wrzucić do folderu public_html i śmiga projekt symfony

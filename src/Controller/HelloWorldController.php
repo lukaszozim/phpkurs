@@ -6,14 +6,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-class TestController extends AbstractController
+class HelloWorldController extends AbstractController
 {
-    #[Route('/test ', name: 'app_test')]
+    #[Route('/hello-world ', name: 'app_hello_world')]
     public function index(): JsonResponse
     {
         return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/TestController.php',
+            'message' => 'Hello World! controller!',
+            'path' => 'src/Controller/HelloWorldController.php',
         ]);
     }
 }

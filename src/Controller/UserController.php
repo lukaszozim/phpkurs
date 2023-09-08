@@ -14,11 +14,10 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends AbstractController
 {
 
-    #[Route(' ', name: 'app_users')]
+    #[Route('/users', name: 'app_users')]
     public function index(UserServices $userServices): JsonResponse
     {
         $users= $userServices->getAllUsers();
-        print_r($users);
 
         return $this->json([
             $users
@@ -26,9 +25,9 @@ class UserController extends AbstractController
     }
 
     #[Route('/user/{id}', name: 'app_user')]
-    public function getUserById(UserServices $userServices): JsonResponse
+    public function getUserById(UserServices $userServices, int $id): JsonResponse
     {
-        $user = $userServices->getUserById(1);
+        $user = $userServices->getUserById($id);
         print_r($user);
         return $this->json([
             $user

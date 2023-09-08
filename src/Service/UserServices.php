@@ -2,16 +2,23 @@
 
 namespace App\Service;
 
+use App\Entity\User;
 use App\Repository\UserRepository;
 
 class UserServices 
 {
-    public function __construct(private UserRepository $userRepository) 
+    /**
+     * @param UserRepository $userRepository
+     */
+    public function __construct(readonly private UserRepository $userRepository)
     {
         
     }
 
-    public function showTest() : string 
+    /**
+     * @return string
+     */
+    public function showTest() : string
     {
         
         $message = "This is showTest!";
@@ -24,19 +31,21 @@ class UserServices
      * @return User[] Returns an array of User objects
      */
 
-    public function getAllUsers() : array
+    /**
+     * @return array<User|null>
+     */
+    public function getAllUsers(): array
     {
-        $users = $this->userRepository->findAll();
-        // print_r($users);
-        return $users;
-        
+        return $this->userRepository->findAll();
     }
 
-    //nie wiedzialem jaki tu zrobic typehit co zwraca ta metoda; zostawiam na razie puste
-    public function getUserById (int $id)  
+    /**
+     * @param int $id
+     * @return User|null
+     */
+    public function getUserById (int $id): ?User
     {
-        $user = $this->userRepository->find($id);
-        return $user;
+        return $this->userRepository->find($id) ?? null;
     }
     
 }

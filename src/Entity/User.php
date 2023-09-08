@@ -19,7 +19,10 @@ class User
     #[ORM\Column(length: 255)]
     private ?string $last_name = null;
 
-    #[ORM\Column]
+    #[ORM\Column(length: 255)]
+    private ?string $email = null;
+
+    #[ORM\Column(nullable: true)]
     private ?int $phone_number = null;
 
     #[ORM\Column(length: 255)]
@@ -54,12 +57,24 @@ class User
         return $this;
     }
 
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
     public function getPhoneNumber(): ?int
     {
         return $this->phone_number;
     }
 
-    public function setPhoneNumber(int $phone_number): static
+    public function setPhoneNumber(?int $phone_number): static
     {
         $this->phone_number = $phone_number;
 

@@ -1,0 +1,9 @@
+1. Feature 1
+    Dodanie encji User, stworzenie kontrolera, serwisu z użyciem DI.
+
+2. Feature 2
+    Napisanie mechanizmu dodawania nowego użytkownika
+    Mechanizm powinien zawierać deserializacje danych z requesta oraz validacje.
+    Można napisać własne walidatory, inaczej walidować użytkowników na podstawie nr roli i inaczej nadawać role
+    np. jeśli dodawany użytkownik ma nr tel zaczynający się od 666 należy dodać mu rolę ADMIN każdemu innemu należy
+    nadać dolę USER.

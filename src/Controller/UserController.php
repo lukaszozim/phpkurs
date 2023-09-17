@@ -44,17 +44,23 @@ class UserController extends AbstractController
         ]);
     }
 
-
     #[Route('/create-user ', name: 'create_user')]
     public function createUser(UserServices $userServices, Request $request) : Response {
 
         //serialize data
         $data = $userServices->serializeData($request);
 
-        if ($userServices->createUser($data)) {
+        //validate data
+        if ($userServices->validate($data)) {
+        
+            //add data to the database
+            $userServices->addToDataBase($data);
             return new Response('User saved in the DB! ');
+
         } else {
+            //return in case validation is not successful
             return new Response('User NOT SAVED IN THE DB!!!');
+
         };
 
     }

@@ -28,7 +28,7 @@ class UserController extends AbstractController
     public function index(UserServices $userServices): JsonResponse
     {
         $users= $userServices->getAllUsers();
-        var_dump($users);
+
         return $this->json([
             $users
         ]);
@@ -48,12 +48,8 @@ class UserController extends AbstractController
     #[Route('/create-user ', name: 'create_user')]
     public function createUser(UserServices $userServices, Request $request) : Response {
 
-        $data = [
-            'firstName'     =>  $request->get('firstName'), 
-            'lastName'      =>  $request->get('lastName'), 
-            'email'         =>  $request->get('email'), 
-            'phoneNumber'   =>  $request->get('phoneNumber'),
-        ];
+        //serialize data
+        $data = $userServices->serializeData($request);
 
         if ($userServices->createUser($data)) {
             return new Response('User saved in the DB! ');
@@ -62,31 +58,5 @@ class UserController extends AbstractController
         };
 
     }
-
-    // to do input point as JSON
-    // #[Route('/create-user ', name: 'create_user')]
-    // public function createUser(UserServices $userServices, Request $request): Response
-    // {
-    //     $request = 
-    //     $userData = json_decode($request->getContent(), true);
-
-    //     if (json_last_error() !== JSON_ERROR_NONE) {
-    //         return new Response('Invalid JSON', Response::HTTP_BAD_REQUEST);
-    //     }
-
-    //     //serialize
-
-    //     //validate;
-
-    //     $user = $userServices->createUser(
-    //         $userData['firstName'],
-    //         $userData['lastName'],
-    //         $userData['email'],
-    //         $userData['phoneNumber']
-    //     );
-
-
-    //     return new Response('User saved in the DB! ' . $user->getEmail());
-    // }
 
 }

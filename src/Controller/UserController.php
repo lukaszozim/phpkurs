@@ -2,19 +2,27 @@
 
 namespace App\Controller;
 
+use App\DTO\UserDTO;
 use App\Entity\User;
-use App\Repository\UserRepository;
 use App\Service\UserServices;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class UserController extends AbstractController
 {
 
-    #[Route('/users', name: 'app_users')]
+    public function __construct(private readonly UserServices $userServices)
+    {
+        
+    }
+
+    #[Route('/users', name: 'app_users', methods:["GET"])]
     public function index(UserServices $userServices): JsonResponse
     {
         $users= $userServices->getAllUsers();
@@ -35,21 +43,19 @@ class UserController extends AbstractController
     }
 
 
-    #[Route('/create-user ', name: 'create_user')]
-    public function createUser(EntityManagerInterface $entityManager) : Response {
+    #[Route('/users ', name: 'create_user', methods:['POST'])]
+    public function createUser(Request $request, SerializerInterface $serializer) : JsonResponse {
         
-        $user = new User();
-        $user->setFirstName('Bruce');
-        $user->setLastName('Willis');
-        $user->setEmail('bw@gmail.com');
-        $user->setPhoneNumber(334444);
-        $user->setRole('user');
+        
+        $userData = $serializer->deserialize($request->getContent(), UserDTO::class, "json"); //do context kolejne paraemtyr. hide, etc.;
 
-        $entityManager->persist($user);
+        // var_dump($userData);
 
-        $entityManager->flush();
+        //do konstruktora userService; i na tym createUser i wynik do jsonbresponse; 
 
-        return new Response('User saved in the DB! ' . $user->getEmail());
+        $this->userServices->createUser($userData);
+
+        return new JsonResponse("OKOKOK");
 
     }
 

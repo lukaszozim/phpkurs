@@ -82,7 +82,15 @@ class UserController extends AbstractController
 
         $userDTO = $userServices->createCurrentDTOUser($request);
 
-        $newUser = $userServices->createUser($userDTO);
+        try {
+
+            $userServices->createUser($userDTO);
+
+        } catch (Exception $e) {
+
+                // echo "Caught exception: " . $e->getMessage(), "/n";
+                return new Response($e->getMessage());
+        }
 
         return new Response("New User has been added!");
 
@@ -97,9 +105,15 @@ class UserController extends AbstractController
         } else {
 
         $userServices->delete($user);
-        
+
         return new Response ('User Deleted');
         }
+    }
+
+    #[Route('/testy', name: 'testy')]
+    public function test()
+    {
+
     }
 
 

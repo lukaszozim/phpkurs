@@ -22,6 +22,7 @@ class Service {
 
     public function action(AnimalInterface $animal) {
         $animal->action();
+        // tutaj moga byc inne metody z animal interface np w jakiejsc konkretnej kolejnosci??
     }
 }
 
@@ -29,7 +30,7 @@ $bird = new Bird();
 $dog = new Dog();
 
 $service = new Service();
-$service->action($bird);
+$service->action($bird); // rozumiem, ze to jest to samo co $bird->action();??
 $service->action($dog);
 
 //--------------------------------------------

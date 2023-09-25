@@ -2,13 +2,15 @@
 
 namespace App\Service;
 
+use App\DTO\UserDTO;
+
 class UserValidationService {
 
     public array $validationErrors = [];
-    public array $data;
+    public UserDTO $data;
 
 
-    public function __construct(array $data = [])
+    public function __construct(UserDTO $data)
     {
         $this->data = $data;
 
@@ -17,16 +19,16 @@ class UserValidationService {
     public function validateUserData(): void
     {
         // Validate the firstName
-        $this->isValidFirstName($this->data['firstName']);
+        $this->isValidFirstName($this->data->firstName);
 
         // Validate the lastName
-        $this->isValidLastName($this->data['lastName']);
+        $this->isValidLastName($this->data->lastName);
 
         // Validate the email address
-        $this->isValidEmail($this->data['email']);
+        $this->isValidEmail($this->data->email);
 
         // Validate the phoneNumber
-        $this->isValidPhoneNumber($this->data['phoneNumber']);
+        $this->isValidPhoneNumber($this->data->phoneNumber);
 
     }
 

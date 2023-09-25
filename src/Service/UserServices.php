@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\UserDTO;
 use App\Entity\User;
 use Doctrine\ORM\EntityManager;
 use App\Repository\UserRepository;
@@ -65,33 +66,36 @@ class UserServices
         return $this->userRepository->find($id) ?? null;
     }
 
+    
+    //?? metoda na utowrzenie instancji DTOUser wraz z parametrami z request
 
-    public function addToDataBase(array $data): void
-    {
-        $user = new User();
-        $user->setFirstName($data['firstName']);
-        $user->setLastName($data['lastName']);
-        $user->setEmail($data['email']);
-        $user->setPhoneNumber($data['phoneNumber']);
+    public function createCurrentDTOUser($request) {
+        $params = (array)json_decode($request->getContent()); //odkodowanie danych z request w postaci json; 
 
-        if ($this->extractRoleFromPhoneNumber($data['phoneNumber']) == 666) {
-            $user->setRole('ADMIN');
-        } else {
-            $user->setRole('USER');
-        }
+        $userDTO = new UserDTO();
 
-        // Persist the user entity to the database
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
+        $userDTO->setLastName($params['lastName']);
+        $userDTO->setFirstName($params['firstName']);
+        $userDTO->setEmail($params['email']);
+        $userDTO->setPhoneNumber($params['phoneNumber']);
 
+        return $userDTO;
+    }
+
+//create i tu wrzucam DTOUSer;
+    public function createUser(UserDTO $dtoUser) {
+
+        $creator = new UserCreator($dtoUser);
+        $creator->createUser($this->entityManager);
+        
     }
 
 
-    public function validate(array $data) : bool
+    public function validate(UserDTO $dtoUser) : bool
     {
-        $newUserValidation = new UserValidationService($data);
+        $newUserValidation = new UserValidationService($dtoUser);
 
-        $newUserValidation->validateUserData($data);
+        $newUserValidation->validateUserData($dtoUser);
         $validationErrors = $newUserValidation->validationErrors;
 
         if (!empty($validationErrors)) {
@@ -110,14 +114,7 @@ class UserServices
 
     }
 
-    private function extractRoleFromPhoneNumber(int $phoneNumber) : string
-    {
 
-        $string = (string)$phoneNumber;
-        $result = (int)substr($string, 0, 3);
-        
-        return $result;
-    }
 
 
     public function serializeData($request) : array
@@ -137,6 +134,13 @@ class UserServices
         // $jsonContent = $serializer->serialize($data, 'json');
 
         return $data;
+
+    }
+
+    public function delete(User $user) 
+    {
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
 
     }
     

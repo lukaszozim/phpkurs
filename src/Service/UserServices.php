@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManager;
 use App\Repository\UserRepository;
 use App\Service\UserValidationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\VarDumper\VarDumper;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\HttpFoundation\Response;
@@ -85,9 +86,16 @@ class UserServices
 //create i tu wrzucam DTOUSer;
     public function createUser(UserDTO $dtoUser) {
 
+        if ($this->validate($dtoUser)) {
+
         $creator = new UserCreator($dtoUser);
         $creator->createUser($this->entityManager);
-        
+
+        } else {
+
+            throw new Exception('Error: User not added');
+            
+        }
     }
 
 

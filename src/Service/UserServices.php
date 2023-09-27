@@ -49,9 +49,8 @@ class UserServices
         return $this->userRepository->find($id) ?? null;
     }
 
-    public function createUser(UserDTO $userDto) {
+    public function createUser(UserDTO $userDto): User {
 
-        //validacja
         $user = new User();
         $user->setFirstName($userDto->firstName);
         $user->setLastName($userDto->lastName);
@@ -61,7 +60,6 @@ class UserServices
         $user->setRole("ADMIN");
         
         return $this->userRepository->save($user);
-
     }
     
 }

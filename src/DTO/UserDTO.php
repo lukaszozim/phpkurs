@@ -4,10 +4,10 @@ namespace App\DTO;
 
 class UserDTO {
 
-    public string $firstName = '';
-    public string $lastName = '';
-    public string $email = '';
-    public int $phoneNumber = 0;
+    public ?string $firstName;
+    public ?string $lastName;
+    public ?string $email;
+    public null|int $phoneNumber;
 
 
 // poniżej Homework do funkcji populate;
@@ -58,19 +58,15 @@ class UserDTO {
     //     return $this;
     // }
 
-    public function populate(array $params)
-    {
-        foreach (get_object_vars($this) as $key => $objectParam) {
+    // public function populate(array $params)
+    // {
+    //     foreach (get_object_vars($this) as $key => $objectParam) {
 
-            if(isset($params[$key]) && $this->{$key} = $params[$key]) {
+    //         isset($params[$key]) && $this->{$key} = $params[$key];
 
-                $this->{$key} = $params[$key];
+    //     }
 
-            };
-            
-        }
-
-        return $this;
-    }
+    //     return $this;
+    // }
 
 }

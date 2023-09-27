@@ -4,24 +4,34 @@ namespace App\DTO;
 
 class UserDTO {
 
-    public string $firstName;
-    public string $lastName;
-    public string $email;
-    public int $phoneNumber;
+    public string $firstName = '';
+    public string $lastName = '';
+    public string $email = '';
+    public int $phoneNumber = 0;
 
 
-    // public function populate(array $params) {
+// poniżej Homework do funkcji populate;
+    public function populate(array $params) {
+
+        $objectVars = array_keys(get_object_vars($this));
+
+        foreach ($objectVars as $objectParam) {
+
+            foreach ($params as $param => $value) {
 
 
-// iteraca po kluczach i potem porownanie z tym o mamy w tablicy; 
-//pobiueram wszystkie ele obiektu getcalssvars. bedzie t w tablicy.. 
-//iteracja sprawdza czy key wystepuja w prams; pramfilter; jesli znajdzie to wycigam i przypisuje do zmiennej firstName;; 
+                if ($objectParam == $param) {
 
-// $this->{klucz pierwszej interacji} = wartosc z tablicy params z tyms samym key;
+                    $this->{$objectParam} = $value;
 
-    // }
+                }
 
+            }
 
+        }
 
+        return $this;
+
+    }
 
 }

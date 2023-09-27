@@ -44,18 +44,17 @@ class UserController extends AbstractController
 
 
     #[Route('/users ', name: 'create_user', methods:['POST'])]
-    public function createUser(Request $request, SerializerInterface $serializer) : JsonResponse {
-        
+    public function createUser(Request $request, SerializerInterface $serializer) :JsonResponse {
         
         $userData = $serializer->deserialize($request->getContent(), UserDTO::class, "json"); //do context kolejne paraemtyr. hide, etc.;
 
-        // var_dump($userData);
-
-        //do konstruktora userService; i na tym createUser i wynik do jsonbresponse; 
+        // poniżej praca domowa funcka populate
+        // $newUserDTO = new UserDTO();
+        // $userData = $newUserDTO->populate(json_decode($request->getContent(), true));
 
         $this->userServices->createUser($userData);
 
-        return new JsonResponse("OKOKOK");
+        return new JsonResponse($userData);
 
     }
 

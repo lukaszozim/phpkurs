@@ -12,7 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+
 
 class UserController extends AbstractController
 {
@@ -44,17 +46,21 @@ class UserController extends AbstractController
 
 
     #[Route('/users ', name: 'create_user', methods:['POST'])]
-    public function createUser(Request $request, SerializerInterface $serializer) :JsonResponse {
+    public function createUser(Request $request, SerializerInterface $serializer, ValidatorInterface $validator) :JsonResponse {
         
         $userData = $serializer->deserialize($request->getContent(), UserDTO::class, "json"); //do context kolejne paraemtyr. hide, etc.;
 
-        // poniżej praca domowa funcka populate
-        // $newUserDTO = new UserDTO();
-        // $userData = $newUserDTO->populate(json_decode($request->getContent(), true));
+        $errors = $validator->validate($userData); //zwraca tablice elemetów errors
 
-        $this->userServices->createUser($userData);
+        if (count($errors) > 0) {
 
-        return new JsonResponse($userData);
+            $errorsString = (string) $errors;
+            return new JsonResponse($errorsString, 400);
+        } 
+
+        // $this->userServices->createUser($userData);
+
+        return $this->json($userData, 200);
 
     }
 

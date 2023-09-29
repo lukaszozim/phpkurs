@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
@@ -23,6 +24,7 @@ class User
     private ?string $email = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\NotBlank]
     private ?int $phone_number = null;
 
     #[ORM\Column(length: 255)]
@@ -38,7 +40,7 @@ class User
         return $this->first_name;
     }
 
-    public function setFirstName(string $first_name): static
+    public function setFirstName(string $first_name)
     {
         $this->first_name = $first_name;
 
@@ -50,7 +52,7 @@ class User
         return $this->last_name;
     }
 
-    public function setLastName(string $last_name): static
+    public function setLastName(string $last_name)
     {
         $this->last_name = $last_name;
 
@@ -62,7 +64,7 @@ class User
         return $this->email;
     }
 
-    public function setEmail(string $email): static
+    public function setEmail(string $email)
     {
         $this->email = $email;
 
@@ -74,7 +76,7 @@ class User
         return $this->phone_number;
     }
 
-    public function setPhoneNumber(?int $phone_number): static
+    public function setPhoneNumber(?int $phone_number)
     {
         $this->phone_number = $phone_number;
 
@@ -86,7 +88,7 @@ class User
         return $this->role;
     }
 
-    public function setRole(string $role): static
+    public function setRole(string $role)
     {
         $this->role = $role;
 

@@ -32,4 +32,11 @@ class UserDTO {
     #[Length(max: 9)]
     public int $phoneNumber = 0;
 
+    #[Assert\NotNull]
+    #[NotBlank]
+    #[Type('string')]
+    #[Length(max: 8)]
+    public string $password = '';
+
+
 }

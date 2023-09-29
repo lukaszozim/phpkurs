@@ -5,6 +5,9 @@ namespace App\Service;
 use App\DTO\UserDTO;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Config\SecurityConfig;
+
 
 class UserServices 
 {
@@ -46,24 +49,36 @@ class UserServices
      */
     public function getUserById (int $id): ?User
     {
+        $this->userRepository->getId()->toBinary();
         return $this->userRepository->find($id) ?? null;
     }
 
-    public function createUser(User $user) {
+    public function createUser(UserDto $userDto) {
 
         // //validacja
-        // $user = new User();
-        // $user->setFirstName($userDto->firstName);
-        // $user->setLastName($userDto->lastName);
-        // $user->setEmail($userDto->email);
-        // $user->setPhoneNumber($userDto->phoneNumber);
+        $user = new User();
+        $user->setFirstName($userDto->firstName);
+        $user->setLastName($userDto->lastName);
+        $user->setEmail($userDto->email);
+        $user->setPhoneNumber($userDto->phoneNumber);
 
+        $user->setPassword($this->hashPassword($userDto->password));
         $user->setRole("ADMIN");
 
-        
-        
-        return $this->userRepository->save($user);
+        echo "I am about to save the userDto";
+        $this->userRepository->save($user);
+
+        return $user;
 
     }
+
+    private function hashPassword($password) : string {
+        echo " I am hassing the password";
+        return password_hash($password, PASSWORD_DEFAULT);
+    }
+
+
+
+
     
 }

@@ -58,7 +58,7 @@ class UserController extends AbstractController
             return new JsonResponse($errorsString, 400);
         } 
 
-        // $this->userServices->createUser($userData);
+        $this->userServices->createUser($userData);
 
         return $this->json($userData, 200);
 

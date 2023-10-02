@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Service\UserServices;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Normalizer;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -46,7 +47,7 @@ class UserController extends AbstractController
 
 
     #[Route('/users ', name: 'create_user', methods:['POST'])]
-    public function createUser(Request $request, SerializerInterface $serializer, ValidatorInterface $validator) :JsonResponse {
+    public function createUser(Request $request, SerializerInterface $serializer, ValidatorInterface $validator) : JsonResponse {
         
         $userData = $serializer->deserialize($request->getContent(), UserDTO::class, "json"); //do context kolejne paraemtyr. hide, etc.;
 
@@ -58,9 +59,11 @@ class UserController extends AbstractController
             return new JsonResponse($errorsString, 400);
         } 
 
-        $this->userServices->createUser($userData);
+        $user = $this->userServices->createUser($userData);
 
-        return $this->json($userData, 200);
+
+
+        return $this->json($user, 200, [], ['groups'=> ['read']]);
 
     }
 

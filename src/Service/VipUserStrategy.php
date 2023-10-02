@@ -10,7 +10,7 @@ use App\Interfaces\UserCreatorStrategyInterface;
 class VipUserStrategy implements UserCreatorStrategyInterface
 {
 
-    public function create(UserDTO $userDto, UserRepository $userRepository)
+    public function create(UserDTO $userDto) : User
     {   
         $user = new User();
         $user->setFirstName($userDto->firstName);
@@ -18,8 +18,8 @@ class VipUserStrategy implements UserCreatorStrategyInterface
         $user->setEmail($userDto->email);
         $user->setPhoneNumber($userDto->phoneNumber);
         $user->setPassword((new PasswordHasher($userDto->password))->hashPassword());
-        $user->setRole("ADMIN");
+        $user->setRole("VIP");
 
-        return $userRepository->save($user);
+        return $user;
     }
 }

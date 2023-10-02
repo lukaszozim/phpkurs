@@ -10,7 +10,8 @@ use App\Interfaces\UserCreatorStrategyInterface;
 class SimpleUserStrategy implements UserCreatorStrategyInterface 
 {
 
-    public function create(UserDTO $userDto, UserRepository $userRepository) {
+    public function create(UserDTO $userDto) : User
+    {
 
         $user = new User($userDto);
         $user->setFirstName($userDto->firstName);
@@ -20,7 +21,8 @@ class SimpleUserStrategy implements UserCreatorStrategyInterface
         $user->setPassword((new PasswordHasher($userDto->password))->hashPassword());
         $user->setRole("SIMPLE_USER");
 
-        return $userRepository->save($user);
+ 
+        return $user;
     }
 
 

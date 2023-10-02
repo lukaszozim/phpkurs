@@ -3,34 +3,38 @@
 namespace App\Service;
 
 use App\DTO\UserDTO;
+use App\Entity\User;
+use App\Interfaces\UserCreationInterface;
 use App\Repository\UserRepository;
 use App\Interfaces\UserCreatorStrategyInterface;
 
-class UserCreator   {
+class UserCreator implements UserCreationInterface  {
 
 
-    public $userCreatorStrategy;
+    private UserCreatorStrategyInterface $userCreatorStrategy;
 
-    public function __construct(UserCreatorStrategyInterface $strategy, private readonly UserRepository $userRepository) {
+    public function __construct(private readonly UserRepository $userRepository) {
 
+
+    }
+
+
+    public function create(UserDTO $userDto) : User {
+        
+
+        $user = $this->userCreatorStrategy->create($userDto);
+        $this->userRepository->save($user);
+
+        return $user;
+
+    }
+
+
+    public function setStrategy(UserCreatorStrategyInterface $strategy) : void {
+        
         $this->userCreatorStrategy = $strategy;
-    }
-
-
-    public function create(UserDTO $userDto) {
-        
-        echo "I am creqting user";
-        $this->userCreatorStrategy->create($userDto, $this->userRepository);
 
     }
-
-    // zamiast tego wrzucilem w konstruktor
-    // public function setStrategy(UserCreatorStrategyInterface $strategy) {
-        
-    //     $this->userCreatorStrategy = $strategy;
-    //     var_dump($strategy);
-
-    // }
 
 
 }

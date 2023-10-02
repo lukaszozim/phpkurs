@@ -8,8 +8,8 @@ class PasswordHasher {
 
     public function __construct($password)
     {   
-        $this->password = $password;
 
+        $this->password = $password;
     }
 
     public function hashPassword(): string

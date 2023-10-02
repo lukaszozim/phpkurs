@@ -20,23 +20,27 @@ class User
     private ?Uuid $id;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['read'])]
+    #[Groups(['read', 'VIP', 'ADM'])]
     private ?string $first_name = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['read'])]
+    #[Groups(['read', 'VIP', 'ADM'])]
     private ?string $last_name = null;
 
+    #[Groups([ 'VIP', 'ADM'])]
     #[ORM\Column(length: 255)]
     private ?string $email = null;
 
+    #[Groups(['VIP', 'ADM'])]
     #[ORM\Column(nullable: true)]
     #[Assert\NotBlank]
     private ?int $phone_number = null;
 
+    #[Groups([ 'VIP', 'ADM'])]
     #[ORM\Column(length: 255)]
     private ?string $role = null;
 
+    #[Groups(['ADM'])]
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 

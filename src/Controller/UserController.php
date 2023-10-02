@@ -60,10 +60,10 @@ class UserController extends AbstractController
         } 
 
         $user = $this->userServices->createUser($userData);
+        $serializationGroup = $this->userServices->serializationGroups;
 
 
-
-        return $this->json($user, 200, [], ['groups'=> ['read']]);
+        return $this->json($user, 200, [],['groups' => $serializationGroup]);
 
     }
 

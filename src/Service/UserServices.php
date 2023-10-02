@@ -5,6 +5,7 @@ namespace App\Service;
 use App\DTO\UserDTO;
 use App\Entity\User;
 use App\Repository\UserRepository;
+
 use Symfony\Config\SecurityConfig;
 use App\Interfaces\UserCreationInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -12,6 +13,9 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 class UserServices 
 {
+
+    // private $serializationGroups = ['ADM' => 'ADMIN', 'VIP' => 'VIP', 'SIMPLE_USER'=> 'read'];
+    public $serializationGroups = [];
     /**
      * @param UserRepository $userRepository
      */
@@ -54,24 +58,49 @@ class UserServices
         return $this->userRepository->find($id) ?? null;
     }
 
-    public function createUser(UserDto $userDto) : User {
+    public function createUser(UserDto $userDto) : User 
+    {
 
         // $userCreator = new UserCreator($this->userRepository);
         
-        if ($userDto->phoneNumber == 666666) {
+        if ($this->isAdmin($userDto)) {
+
+            $this->userCreator->setStrategy(new AdminUserStrategy());
+            $this->serializationGroups = ['ADM'];
+            $user = $this->userCreator->create($userDto, $this->userRepository);
+
+        } elseif ($userDto->phoneNumber == 666666) {
 
             $this->userCreator->setStrategy(new VipUserStrategy());
+            $this->serializationGroups = ['VIP'];
             $user = $this->userCreator->create($userDto, $this->userRepository);
+
 
         } else {
 
             $this->userCreator->setStrategy(new SimpleUserStrategy());
+            $this->serializationGroups = ['read'];
             $user = $this->userCreator->create($userDto, $this->userRepository);
 
         };
 
         return $user;
     }
-    
-    
+
+    private function isAdmin($userDto) : bool 
+    {
+
+        $domain = explode('@', $userDto->email);
+        
+        if($domain[1] === 'gmail.com') {
+
+            return true;
+
+        } else {
+
+            return false;
+        }
+
+    }
+
 }

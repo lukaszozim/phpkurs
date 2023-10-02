@@ -20,8 +20,6 @@ use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 class UserServices 
 {
 
-    // private $serializationGroups = ['ADM' => 'ADMIN', 'VIP' => 'VIP', 'SIMPLE_USER'=> 'read'];
-    public $serializationGroups = [];
     /**
      * @param UserRepository $userRepository
      */
@@ -80,28 +78,31 @@ class UserServices
     }
 
 
-    public function getRoleBasedDataSet($request, $data)
+    public function getRoleBasedSerializedData($request, $data)
     {
-
-
 
         $classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
         $normalizer = new ObjectNormalizer($classMetadataFactory);
         $serializer = new Serializer([$normalizer]);
 
-        // $data = $serializer->normalize($data, null, ['groups' => 'group1']);
-
         if ($request->headers->get('auth') === 'vip') {
+
             $data = $serializer->normalize($data, null, ['groups' => 'vip']);
+
             return new JsonResponse($data);
+
         } elseif ($request->headers->get('auth') === 'adm') {
 
-            $data = $serializer->normalize($data, null, ['groups' => 'vip']);
+            $data = $serializer->normalize($data, null, ['groups' => 'adm']);
+
             return new JsonResponse($data);
 
         } else {
-            $data = $serializer->normalize($data, null, ['groups' => 'vip']);
+
+            $data = $serializer->normalize($data, null, ['groups' => 'read']);
+
             return new JsonResponse($data);
+
         }
     }
 

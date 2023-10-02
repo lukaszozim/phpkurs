@@ -30,31 +30,16 @@ class UserController extends AbstractController
     {
         $users= $userServices->getAllUsers();
 
-        return $userServices->getRoleBasedDataSet($request, $users);
-        // if ($request->headers->get('auth') === 'vip') {
-
-        //     return $this->json($users, 200, [], ['groups' => 'vip']);
-
-        // } elseif ($request->headers->get('auth') === 'adm') {
-
-        //     return $this->json($users, 200, [], ['groups' => 'adm']);
-
-        // } else {
-
-        //     return $this->json($users, 200, [], ['groups' => 'read']);
-
-        // }
+        return $userServices->getRoleBasedSerializedData($request, $users);
 
     }
 
     #[Route('/user/{id}', name: 'app_user')]
-    public function getUserById(UserServices $userServices, $id): JsonResponse
+    public function getUserById($id, Request $request): JsonResponse
     {
-        $user = $userServices->getUserById($id);
+        $user = $this->userServices->getUserById($id);
 
-        return $this->json([
-            $user
-        ]);
+        return $this->userServices->getRoleBasedSerializedData($request, $user);
     }
 
 
@@ -72,10 +57,9 @@ class UserController extends AbstractController
         } 
 
         $user = $this->userServices->createUser($userData);
-        $serializationGroup = $this->userServices->serializationGroups;
 
 
-        return $this->json($user, 200, [],['groups' => $serializationGroup]);
+        return $this->userServices->getRoleBasedSerializedData($request, $user);
 
     }
 

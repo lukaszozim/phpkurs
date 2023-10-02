@@ -21,7 +21,6 @@ class UserCreator implements UserCreationInterface  {
 
     public function create(UserDTO $userDto) : User {
         
-
         $user = $this->userCreatorStrategy->create($userDto);
         $this->userRepository->save($user);
 
@@ -30,10 +29,17 @@ class UserCreator implements UserCreationInterface  {
     }
 
 
-    public function setStrategy(UserCreatorStrategyInterface $strategy) : void {
+    public function setStrategy(UserCreatorStrategyInterface $strategy) : void 
+    {
         
         $this->userCreatorStrategy = $strategy;
 
+    }
+
+    public function getStrategy() : UserCreatorStrategyInterface 
+    {
+
+        return $this->userCreatorStrategy;
     }
 
 

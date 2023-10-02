@@ -4,12 +4,18 @@ namespace App\Service;
 
 use App\DTO\UserDTO;
 use App\Entity\User;
-use App\Repository\UserRepository;
+use Symfony\Component\Uid\Uuid;
 
+use App\Repository\UserRepository;
 use Symfony\Config\SecurityConfig;
 use App\Interfaces\UserCreationInterface;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-
+use Doctrine\Common\Annotations\AnnotationReader;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 
 class UserServices 
 {
@@ -45,6 +51,7 @@ class UserServices
      */
     public function getAllUsers(): array
     {
+
         return $this->userRepository->findAll();
     }
 
@@ -52,55 +59,50 @@ class UserServices
      * @param int $id
      * @return User|null
      */
-    public function getUserById (int $id): ?User
+    public function getUserById ($id): ?User
     {
-
-        return $this->userRepository->find($id) ?? null;
+        $user = $this->userRepository->find($id) ?? null;
+        
+        return $user;
     }
 
     public function createUser(UserDto $userDto) : User 
     {
 
-        // $userCreator = new UserCreator($this->userRepository);
-        
-        if ($this->isAdmin($userDto)) {
+        $user = new UserCreationStrategyFactory($userDto, $this->userCreator);
+        $strategy = $user->createUserStrategy();
 
-            $this->userCreator->setStrategy(new AdminUserStrategy());
-            $this->serializationGroups = ['ADM'];
-            $user = $this->userCreator->create($userDto, $this->userRepository);
+        $this->userCreator->setStrategy($strategy);
+        $user = $this->userCreator->create($userDto, $this->userRepository);
 
-        } elseif ($userDto->phoneNumber == 666666) {
-
-            $this->userCreator->setStrategy(new VipUserStrategy());
-            $this->serializationGroups = ['VIP'];
-            $user = $this->userCreator->create($userDto, $this->userRepository);
-
-
-        } else {
-
-            $this->userCreator->setStrategy(new SimpleUserStrategy());
-            $this->serializationGroups = ['read'];
-            $user = $this->userCreator->create($userDto, $this->userRepository);
-
-        };
 
         return $user;
     }
 
-    private function isAdmin($userDto) : bool 
+
+    public function getRoleBasedDataSet($request, $data)
     {
 
-        $domain = explode('@', $userDto->email);
-        
-        if($domain[1] === 'gmail.com') {
 
-            return true;
+
+        $classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
+        $normalizer = new ObjectNormalizer($classMetadataFactory);
+        $serializer = new Serializer([$normalizer]);
+
+        // $data = $serializer->normalize($data, null, ['groups' => 'group1']);
+
+        if ($request->headers->get('auth') === 'vip') {
+            $data = $serializer->normalize($data, null, ['groups' => 'vip']);
+            return new JsonResponse($data);
+        } elseif ($request->headers->get('auth') === 'adm') {
+
+            $data = $serializer->normalize($data, null, ['groups' => 'vip']);
+            return new JsonResponse($data);
 
         } else {
-
-            return false;
+            $data = $serializer->normalize($data, null, ['groups' => 'vip']);
+            return new JsonResponse($data);
         }
-
     }
 
 }

@@ -26,20 +26,32 @@ class UserController extends AbstractController
     }
 
     #[Route('/users', name: 'app_users', methods:["GET"])]
-    public function index(UserServices $userServices): JsonResponse
+    public function index(UserServices $userServices, Request $request): JsonResponse
     {
         $users= $userServices->getAllUsers();
 
-        return $this->json([
-            $users
-        ]);
+        return $userServices->getRoleBasedDataSet($request, $users);
+        // if ($request->headers->get('auth') === 'vip') {
+
+        //     return $this->json($users, 200, [], ['groups' => 'vip']);
+
+        // } elseif ($request->headers->get('auth') === 'adm') {
+
+        //     return $this->json($users, 200, [], ['groups' => 'adm']);
+
+        // } else {
+
+        //     return $this->json($users, 200, [], ['groups' => 'read']);
+
+        // }
+
     }
 
     #[Route('/user/{id}', name: 'app_user')]
-    public function getUserById(UserServices $userServices, int $id): JsonResponse
+    public function getUserById(UserServices $userServices, $id): JsonResponse
     {
         $user = $userServices->getUserById($id);
-        print_r($user);
+
         return $this->json([
             $user
         ]);

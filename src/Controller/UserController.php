@@ -26,23 +26,20 @@ class UserController extends AbstractController
     }
 
     #[Route('/users', name: 'app_users', methods:["GET"])]
-    public function index(UserServices $userServices): JsonResponse
+    public function index(UserServices $userServices, Request $request): JsonResponse
     {
         $users= $userServices->getAllUsers();
 
-        return $this->json([
-            $users
-        ]);
+        return $userServices->getRoleBasedSerializedData($request, $users);
+
     }
 
     #[Route('/user/{id}', name: 'app_user')]
-    public function getUserById(UserServices $userServices, int $id): JsonResponse
+    public function getUserById($id, Request $request): JsonResponse
     {
-        $user = $userServices->getUserById($id);
-        print_r($user);
-        return $this->json([
-            $user
-        ]);
+        $user = $this->userServices->getUserById($id);
+
+        return $this->userServices->getRoleBasedSerializedData($request, $user);
     }
 
 
@@ -62,8 +59,7 @@ class UserController extends AbstractController
         $user = $this->userServices->createUser($userData);
 
 
-
-        return $this->json($user, 200, [], ['groups'=> ['read']]);
+        return $this->userServices->getRoleBasedSerializedData($request, $user);
 
     }
 

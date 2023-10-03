@@ -4,14 +4,22 @@ namespace App\Service;
 
 use App\DTO\UserDTO;
 use App\Entity\User;
+use Symfony\Component\Uid\Uuid;
+
 use App\Repository\UserRepository;
 use Symfony\Config\SecurityConfig;
 use App\Interfaces\UserCreationInterface;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-
+use Doctrine\Common\Annotations\AnnotationReader;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 
 class UserServices 
 {
+
     /**
      * @param UserRepository $userRepository
      */
@@ -41,6 +49,7 @@ class UserServices
      */
     public function getAllUsers(): array
     {
+
         return $this->userRepository->findAll();
     }
 
@@ -48,30 +57,53 @@ class UserServices
      * @param int $id
      * @return User|null
      */
-    public function getUserById (int $id): ?User
+    public function getUserById ($id): ?User
     {
-
-        return $this->userRepository->find($id) ?? null;
+        $user = $this->userRepository->find($id) ?? null;
+        
+        return $user;
     }
 
-    public function createUser(UserDto $userDto) : User {
+    public function createUser(UserDto $userDto) : User 
+    {
 
-        // $userCreator = new UserCreator($this->userRepository);
-        
-        if ($userDto->phoneNumber == 666666) {
+        $user = new UserCreationStrategyFactory($userDto, $this->userCreator);
+        $strategy = $user->createUserStrategy();
 
-            $this->userCreator->setStrategy(new VipUserStrategy());
-            $user = $this->userCreator->create($userDto, $this->userRepository);
+        $this->userCreator->setStrategy($strategy);
+        $user = $this->userCreator->create($userDto, $this->userRepository);
 
-        } else {
-
-            $this->userCreator->setStrategy(new SimpleUserStrategy());
-            $user = $this->userCreator->create($userDto, $this->userRepository);
-
-        };
 
         return $user;
     }
-    
-    
+
+
+    public function getRoleBasedSerializedData($request, $data)
+    {
+
+        $classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
+        $normalizer = new ObjectNormalizer($classMetadataFactory);
+        $serializer = new Serializer([$normalizer]);
+
+        if ($request->headers->get('auth') === 'vip') {
+
+            $data = $serializer->normalize($data, null, ['groups' => 'vip']);
+
+            return new JsonResponse($data);
+
+        } elseif ($request->headers->get('auth') === 'adm') {
+
+            $data = $serializer->normalize($data, null, ['groups' => 'adm']);
+
+            return new JsonResponse($data);
+
+        } else {
+
+            $data = $serializer->normalize($data, null, ['groups' => 'read']);
+
+            return new JsonResponse($data);
+
+        }
+    }
+
 }

@@ -5,13 +5,17 @@ namespace App\Service;
 use App\DTO\UserDTO;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use Symfony\Config\SecurityConfig;
+use App\Interfaces\UserCreationInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+
 
 class UserServices 
 {
     /**
      * @param UserRepository $userRepository
      */
-    public function __construct(readonly private UserRepository $userRepository)
+    public function __construct(readonly private UserRepository $userRepository, readonly private UserCreationInterface $userCreator)
     {
         
     }
@@ -46,22 +50,28 @@ class UserServices
      */
     public function getUserById (int $id): ?User
     {
+
         return $this->userRepository->find($id) ?? null;
     }
 
-    public function createUser(UserDTO $userDto) {
+    public function createUser(UserDto $userDto) : User {
 
-        //validacja
-        $user = new User();
-        $user->setFirstName($userDto->firstName);
-        $user->setLastName($userDto->lastName);
-        $user->setEmail($userDto->email);
-        $user->setPhoneNumber($userDto->phoneNumber);
-
-        $user->setRole("ADMIN");
+        // $userCreator = new UserCreator($this->userRepository);
         
-        return $this->userRepository->save($user);
+        if ($userDto->phoneNumber == 666666) {
 
+            $this->userCreator->setStrategy(new VipUserStrategy());
+            $user = $this->userCreator->create($userDto, $this->userRepository);
+
+        } else {
+
+            $this->userCreator->setStrategy(new SimpleUserStrategy());
+            $user = $this->userCreator->create($userDto, $this->userRepository);
+
+        };
+
+        return $user;
     }
+    
     
 }

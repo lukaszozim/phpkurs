@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\AddressDTO;
 use App\DTO\UserDTO;
 use App\Entity\User;
 use Symfony\Component\Uid\Uuid;
@@ -9,11 +10,13 @@ use Symfony\Component\Uid\Uuid;
 use App\Repository\UserRepository;
 use Symfony\Config\SecurityConfig;
 use App\Interfaces\UserCreationInterface;
+use App\Repository\AddressRepository;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Doctrine\Common\Annotations\AnnotationReader;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 
@@ -72,6 +75,16 @@ class UserServices
 
         $this->userCreator->setStrategy($strategy);
         $user = $this->userCreator->create($userDto, $this->userRepository);
+
+        return $user;
+    }
+
+    public function createUserWithAddress(UserDto $userDto, AddressDTO $addressDto, AddressCreator $addressCreator) : User
+    {
+
+        $user = $this->createUser($userDto);
+
+        $addressCreator->create($addressDto, $user);
 
 
         return $user;

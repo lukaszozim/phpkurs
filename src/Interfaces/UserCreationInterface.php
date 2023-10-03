@@ -13,4 +13,6 @@ interface UserCreationInterface {
 
     public function create(UserDTO $userDto) : User;
 
+    public function getStrategy();
+
 }

@@ -29,12 +29,12 @@ class UserController extends AbstractController
     public function index(UserServices $userServices, Request $request): JsonResponse
     {
         $users= $userServices->getAllUsers();
-
+        //file_put_contents('log.php', print_r($users[4]->getId(), true), 8);
         return $userServices->getRoleBasedSerializedData($request, $users);
 
     }
 
-    #[Route('/user/{id}', name: 'app_user')]
+    #[Route('/users/{id}', name: 'app_user', methods: ['GET'])]
     public function getUserById($id, Request $request): JsonResponse
     {
         $user = $this->userServices->getUserById($id);
@@ -47,7 +47,7 @@ class UserController extends AbstractController
     public function createUser(Request $request, SerializerInterface $serializer, ValidatorInterface $validator) : JsonResponse {
         
         $userData = $serializer->deserialize($request->getContent(), UserDTO::class, "json"); //do context kolejne paraemtyr. hide, etc.;
-
+        file_put_contents('log.php', print_r($userData, true), 8);
         $errors = $validator->validate($userData); //zwraca tablice elemetów errors
 
         if (count($errors) > 0) {

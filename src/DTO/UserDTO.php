@@ -2,6 +2,7 @@
 
 namespace App\DTO;
 
+use App\Entity\Address;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Email;
@@ -38,5 +39,6 @@ class UserDTO {
     #[Length(max: 8)]
     public string $password = '';
 
-
+    /** @var array<AddressDTO>  */
+    public array $addresses;
 }

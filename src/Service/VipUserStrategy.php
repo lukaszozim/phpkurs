@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\DTO\UserDTO;
+use App\Entity\Address;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Interfaces\UserCreatorStrategyInterface;
@@ -20,6 +21,18 @@ class VipUserStrategy implements UserCreatorStrategyInterface
         $user->setPassword((new PasswordHasher($userDto->password))->hashPassword());
         $user->setRole("VIP");
 
+        foreach ($userDto->addresses as $addressDto){
+            $address = new Address();
+            $address
+                ->setUser($user)
+                ->setPostalCode($addressDto->postalCode)
+                ->setCity($addressDto->city)
+                ->setStreet($addressDto->street)
+                ->setHouseNumber($addressDto->houseNumber)
+                ->setApartmentNumber($addressDto->apartmentNumber);
+
+            $user->addAddress($address);
+        }
         return $user;
     }
 }

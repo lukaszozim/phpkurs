@@ -22,7 +22,8 @@ class SimpleUserStrategy implements UserCreatorStrategyInterface
         $user->setPassword((new PasswordHasher($userDto->password))->hashPassword());
         $user->setRole("SIMPLE_USER");
 
-        if(isset($userDto->address)) {
+        if (isset($userDto->address)) {
+
             foreach ($userDto->address as $addressDto) {
                 $address = new Address();
                 $address
@@ -33,8 +34,9 @@ class SimpleUserStrategy implements UserCreatorStrategyInterface
                     ->setStreet($addressDto->Street);
 
                 $user->addAddress($address);
+            }
         }
-    }
+
     
         return $user;
     }

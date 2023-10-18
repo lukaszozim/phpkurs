@@ -9,13 +9,14 @@ use App\DTO\UserDTO;
 use App\Entity\User;
 use App\DTO\AddressDTO;
 use App\Entity\Address;
-use App\Exceptions\UserValidationException;
 use App\Service\UserServices;
 use App\Service\AddressCreator;
 use App\Repository\UserRepository;
 use App\Repository\AddressRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Exceptions\UserValidationException;
 use Symfony\Component\HttpFoundation\Request;
+use App\Exceptions\AddressValidationException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -73,7 +74,10 @@ class UserController extends AbstractController
 
         } catch(Exception $e) {
 
-            if($e instanceOf UserValidationException) {
+            if($e instanceof UserValidationException) {
+                return $this->json($e->getMessage());
+            } 
+            if ($e instanceof AddressValidationException) {
                 return $this->json($e->getMessage());
             }
 //tutaj mozna dodac kolejne user eception not found;

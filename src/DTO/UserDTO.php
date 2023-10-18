@@ -40,6 +40,7 @@ class UserDTO {
     #[Length(max: 8)]
     public string $password = '';
 
+    #[Type('array')]
     /** @var array<AddressDTO>  */
     public array $address;
 

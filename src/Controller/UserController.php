@@ -4,9 +4,12 @@ namespace App\Controller;
 
 use Exception;
 use Normalizer;
+use App\Vars\Roles;
 use App\DTO\UserDTO;
 use App\Entity\User;
 use App\DTO\AddressDTO;
+use App\Entity\Address;
+use App\Exceptions\UserValidationException;
 use App\Service\UserServices;
 use App\Service\AddressCreator;
 use App\Repository\UserRepository;
@@ -31,97 +34,54 @@ class UserController extends AbstractController
     }
 
     #[Route('/users', name: 'app_users', methods:["GET"])]
-    public function index(Request $request)
+    public function index(Request $request) : JsonResponse
     {
         $users= $this->userServices->getAllUsers();
 
-        // foreach ($users as $user) {
-        // var_dump($user->getId());//zeby wyciagnac uuid userów do testow. 
-        // }
-
-        return $this->userServices->getRoleBasedSerializedData($request, $users);
+        return $this->json($users, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
     }
 
 
-    #[Route('/user/{id}', name: 'app_user')]
+    #[Route('/users/{id}', name: 'app_user', methods: ["GET"])]
     public function getUserById($id, Request $request): JsonResponse
     {
         $user = $this->userServices->getUserById($id);
 
-        return $this->userServices->getRoleBasedSerializedData($request, $user);
+        return $this->json($user, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
     }
 
 
-    #[Route('/user/{id}/addresses', name: 'app_user_address')]
-    public function getUserByIdWithAddress($id, Request $request): JsonResponse
+    #[Route('/users ', name: 'create_user', methods: ['POST'])]
+    public function createUser(Request $request, SerializerInterface $serializer): JsonResponse
     {
-        $user = $this->userServices->getUserById($id);
-        $addresses = $user->getAddresses();
 
-        $userData = [
-            'user' => $user,
-            'addresses' => $addresses,
-        ];
-
-        return $this->userServices->getRoleBasedSerializedData($request, $userData);
-    }
-
-    #[Route('/users ', name: 'create_user', methods:['POST'])]
-    public function createUser(Request $request, SerializerInterface $serializer, ValidatorInterface $validator) : JsonResponse {
-        
-        $userData = $serializer->deserialize($request->getContent(), UserDTO::class, "json"); //do context kolejne paraemtyr. hide, etc.;
-
-        $errors = $validator->validate($userData); //zwraca tablice elemetów errors
-
-        if (count($errors) > 0) {
-
-            $errorsString = (string) $errors;
-            return new JsonResponse($errorsString, 400);
-        } 
+        $userData = $serializer->deserialize($request->getContent(), UserDTO::class, "json");
 
         $user = $this->userServices->createUser($userData);
 
-        return $this->userServices->getRoleBasedSerializedData($request, $user);
-
+        return $this->json($user, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
     }
 
 
-    #[Route('/usersandaddresses ', name: 'create_user_address', methods: ['POST'])]
-    public function createUserWithAddress(Request $request, SerializerInterface $serializer, ValidatorInterface $validator, AddressCreator $addressCreator): JsonResponse
+    #[Route('/users/{id} ', name: 'update_user', methods: ['PUT'])]
+    public function updateUser($id, Request $request, SerializerInterface $serializer): JsonResponse
     {
 
-        $data = json_decode($request->getContent(), true); // zeby moz wyciaganc z requesta oddzielnie user i oddzielnie address
-
         try {
-            //wczesniej jak nie zrobilem jsonencode uzywlem $serializer->denormalize
-            $userData = $serializer->deserialize(json_encode($data['user']), UserDTO::class, "json"); 
-            $addressData = $serializer->deserialize(json_encode($data['address']), AddressDTO::class, "json");
+            $updatedUserDTO = $serializer->deserialize($request->getContent(), UserDTO::class, "json");
+            $user = $this->userServices->updateUser($updatedUserDTO, $id);
 
-        } catch (NotEncodableValueException $e) {
+        } catch(Exception $e) {
 
-            return new JsonResponse(['type' => 'Invalida JSON data', 'error' => $e]);
-
-        } catch (\Exception $e) {
-
-            return new JsonResponse(['error' => 'An unexpected error occurred'], 500);
-
+            if($e instanceOf UserValidationException) {
+                return $this->json($e->getMessage());
+            }
+//tutaj mozna dodac kolejne user eception not found;
+            return $this->json('Unforseen Error Occurred!');
         }
 
-        $errors['userData'] = $validator->validate($userData); //zwraca tablice elemetów errors
-        $errors['addressData'] = $validator->validate($addressData);
-
-
-        if (count($errors['userData']) > 0 || count($errors['addressData']) > 0) {
-
-            $errorsString = (string) ($errors['userData'] . $errors['addressData']);
-
-            return new JsonResponse($errorsString, 400);
-        }
-
-        
-        $user = $this->userServices->createUserWithAddress($userData, $addressData, $addressCreator);
-
-        return $this->userServices->getRoleBasedSerializedData($request, $user);
+        return $this->json($user, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
     }
+
 
 }

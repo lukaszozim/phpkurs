@@ -2,23 +2,26 @@
 
 namespace App\Service;
 
-use App\DTO\AddressDTO;
 use App\DTO\UserDTO;
 use App\Entity\User;
+use App\DTO\AddressDTO;
+use App\Entity\Address;
+use App\Exceptions\UserValidationException;
 use Symfony\Component\Uid\Uuid;
-
 use App\Repository\UserRepository;
 use Symfony\Config\SecurityConfig;
-use App\Interfaces\UserCreationInterface;
 use App\Repository\AddressRepository;
+use App\Interfaces\UserCreationInterface;
 use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\HttpFoundation\Response;
+use Doctrine\Common\Annotations\AnnotationReader;
+use Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Doctrine\Common\Annotations\AnnotationReader;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 class UserServices 
 {
@@ -26,7 +29,7 @@ class UserServices
     /**
      * @param UserRepository $userRepository
      */
-    public function __construct(readonly private UserRepository $userRepository, readonly private UserCreationInterface $userCreator)
+    public function __construct(readonly private UserRepository $userRepository, readonly private UserCreationInterface $userCreator, readonly private AddressRepository $addressRepository, readonly private ValidatorInterface $validator)
     {
         
     }
@@ -62,32 +65,77 @@ class UserServices
      */
     public function getUserById ($id): ?User
     {
+    
+        return $this->findUserById($id);
+    }
+
+    /**
+     * @param int $id
+     * @return User|null
+     */
+    private function findUserById($id): ?User
+    {
         $user = $this->userRepository->find($id) ?? null;
-        
+
         return $user;
     }
 
-    public function createUser(UserDto $userDto) : User 
+    public function createUser(UserDto $userDto) : ?User 
     {
+        
+        if($this->validateData($userDto)) 
+        {
+            return null;
+        } 
 
         $user = new UserCreationStrategyFactory($userDto, $this->userCreator);
-        $strategy = $user->createUserStrategy();
+        $this->userCreator->setStrategy($user->createUserStrategy());
 
-        $this->userCreator->setStrategy($strategy);
         $user = $this->userCreator->create($userDto, $this->userRepository);
 
         return $user;
-    }
+    } 
 
-    public function createUserWithAddress(UserDto $userDto, AddressDTO $addressDto, AddressCreator $addressCreator) : User
+    
+
+    public function updateUser(UserDTO $userDto, $id) : ?User
     {
 
-        $user = $this->createUser($userDto);
+        if ($this->validateData($userDto)) {
 
-        $addressCreator->create($addressDto, $user);
+            Throw new UserValidationException();
+        }
 
+        $user = $this->findUserById($id);
+//!!!
+        if (!$user) {
+
+            return null;
+        }
+
+        //zakladamy ze zmieniamy tylko adres i imie i nazwisko
+        $user->setFirstName($userDto->firstName);
+        $user->setLastName($userDto->lastName);
+        $this->userRepository->save($user);
 
         return $user;
+
+    }
+
+
+
+    private function validateData($data)
+    {
+
+        $errors = $this->validator->validate($data);
+
+        if (count($errors) > 0) {
+            $errorsString[] = (string) $errors;
+            // return new JsonResponse($errorsString, 400);
+            return $errorsString;
+        } 
+
+        return null;
     }
 
 
@@ -98,25 +146,14 @@ class UserServices
         $normalizer = new ObjectNormalizer($classMetadataFactory);
         $serializer = new Serializer([$normalizer]);
 
-        if ($request->headers->get('auth') === 'vip') {
+        $data = match(true) {
+            $request->headers->get('auth') === 'vip'    => $data = $serializer->normalize($data, null, ['groups' => 'vip']),
+            $request->headers->get('auth') === 'adm'    => $data = $serializer->normalize($data, null, ['groups' => 'adm']),
+            default                                     => $data = $serializer->normalize($data, null, ['groups' => 'read'])
+        };
 
-            $data = $serializer->normalize($data, null, ['groups' => 'vip']);
+        return new JsonResponse($data);
 
-            return new JsonResponse($data);
-
-        } elseif ($request->headers->get('auth') === 'adm') {
-
-            $data = $serializer->normalize($data, null, ['groups' => 'adm']);
-
-            return new JsonResponse($data);
-
-        } else {
-
-            $data = $serializer->normalize($data, null, ['groups' => 'read']);
-
-            return new JsonResponse($data);
-
-        }
     }
 
 }

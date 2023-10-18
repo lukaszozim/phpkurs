@@ -21,18 +21,21 @@ class AddressCreator
     }
 
 
-    public function create(AddressDTO $addressDto, User $user ): Address
+    public function create(AddressDto $address, User $user ): Address
     {
 
-        $address = new Address();
-        $address->setCity($addressDto->City);
-        $address->setStreet($addressDto->Street);
-        $address->setZipCode($addressDto->ZipCode);
-        $address->setType($addressDto->type);
-        $address->setUser($user);
-        $this->addressRepository->save($address);
+        // $user->addAddress($address);
+        $address1 = new Address();
+        $address1
+            ->setCity($address->City)
+            ->setStreet($address->Street)
+            ->setZipCode($address->ZipCode)
+            ->setType($address->type)
+            ->setUser($user);
+            
+        $this->addressRepository->save($address1);
 
-        return $address;
+        return $address1;
     }
 
 

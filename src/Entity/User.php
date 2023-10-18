@@ -2,15 +2,18 @@
 
 namespace App\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use App\DTO\AddressDTO;
+use App\Service\AddressCreator;
 use Symfony\Component\Uid\Uuid;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\UserRepository;
+use App\Repository\AddressRepository;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
@@ -47,12 +50,14 @@ class User
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Address::class, orphanRemoval: true)]
+    #[Groups(['adm', 'vip'])]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Address::class, orphanRemoval: true, cascade:["persist"])]
     private Collection $addresses;
 
     public function __construct()
     {
         $this->addresses = new ArrayCollection();
+
     }
 
 
@@ -143,8 +148,11 @@ class User
 
     public function addAddress(Address $address): static
     {
+
+
         if (!$this->addresses->contains($address)) {
             $this->addresses->add($address);
+
             $address->setUser($this);
         }
 

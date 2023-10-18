@@ -5,6 +5,7 @@ namespace App\Service;
 use App\DTO\UserDTO;
 use App\Entity\User;
 use App\Interfaces\UserCreationInterface;
+use App\Interfaces\UserCreatorStrategyInterface;
 
 class UserCreationStrategyFactory {
 
@@ -17,31 +18,24 @@ class UserCreationStrategyFactory {
     }
 
 
-    public function createUserStrategy () 
+    public function createUserStrategy () : UserCreatorStrategyInterface
     {
 
-        if($this->isAdmin($this->userDto)) {
+        $strategy = match (true) {
 
-            $this->userCreator->setStrategy(new AdminUserStrategy());
+            $this->isAdmin($this->userDto)          => new AdminUserStrategy(),
+            $this->userDto->phoneNumber === 666666  => new VipUserStrategy(),
+            default                                 => new SimpleUserStrategy()
+        };
 
-            return $this->userCreator->getStrategy();
 
-        } elseif ($this->userDto->phoneNumber == 666666) {
 
-            $this->userCreator->setStrategy(new VipUserStrategy());
-
-            return $this->userCreator->getStrategy();
-
-        } else {
-
-            $this->userCreator->setStrategy(new SimpleUserStrategy());
-
-            return $this->userCreator->getStrategy();
-        }
+        return $strategy;
 
     }
 
     
+
 
     private function isAdmin($userDto): bool
     {

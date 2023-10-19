@@ -36,6 +36,7 @@ class UserServices
         readonly private UserRepository $userRepository, 
         readonly private UserCreationInterface $userCreator, 
         readonly private AddressRepository $addressRepository,
+        readonly private AddressService $addressService,
         readonly private ValidatorInterface $validator)
     {
         
@@ -115,38 +116,49 @@ class UserServices
 
     public function updateUser(UserDTO $userDto, $id) : ?User
     {
-        if ($this->validateData($userDto)) {
-            throw new UserValidationException();
-
-        }
+        $this->validateData($userDto) && throw new UserValidationException();
 
         $user = $this->findUserById($id);
-
-        if (!$user) {
-            
-            return null;
-        }
-
+        if (!$user) return null;
         $this->setAllowedFields($userDto, $user);
 
         //save and stop if there are no addresses in the request;
-        if(!$userDto->address) {
-            $this->userRepository->save($user); 
-
-            return $user;
-        }
-
-        $currentAddresses = $user->getAddresses();
-
-        $addressService = new AddressService($this->addressRepository, $this->userRepository, $currentAddresses, $userDto);
-        $addressService->processNewAddresses($user, $userDto, $currentAddresses);
-
+        if(!$userDto->address) return !$userDto->address ? $this->userRepository->save($user) : $user; 
+        $this->addressService->processNewAddresses($user, $userDto, $user->getAddresses());
         $this->userRepository->save($user);
 
         return $user;
 
         } 
-    
+
+    public function deleteUser($id) : User|UserValidationException
+    {
+        $user = $this->findUserById($id);
+
+        if(!$user) {
+            throw new UserValidationException('User not found', 404);
+        }
+        
+        return $this->userRepository->delete($user);
+
+    }
+
+    public function deleteAddress($id, $addressType) 
+    {
+
+        $user = $this->getUserById($id);
+
+        foreach ($user->getAddresses() as $address) {
+            if (strtolower($address->getType()) === strtolower($addressType)) {
+                echo "I should remove the address";
+                $user->removeAddress($address);
+            }
+        }
+
+        $this->userRepository->flushAddress($address);
+
+    }
+
     public function checkRole($user) {
 
         $role = match (true)

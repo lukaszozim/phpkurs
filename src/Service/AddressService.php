@@ -15,7 +15,7 @@ class AddressService
 
     const AVAILABLE_ADDRESS_TYPES = ['PRIVATE', 'BUSINESS', 'CORRESPONDANCE'];
 
-    public function __construct(private readonly AddressRepository $addressRepository, private readonly UserRepository $userRepository, private readonly Collection $currentAddresses, private readonly UserDTO $userDto)
+    public function __construct(private readonly AddressRepository $addressRepository, private readonly UserRepository $userRepository, private readonly UserDTO $userDto)
     {
 
     }

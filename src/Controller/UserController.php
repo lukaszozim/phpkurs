@@ -73,7 +73,7 @@ class UserController extends AbstractController
             $user = $this->userServices->updateUser($updatedUserDTO, $id);
 
         } catch(Exception $e) {
-echo "I went to the catch";
+
             if($e instanceof UserValidationException) {
                 return $this->json($e->getMessage());
             } 
@@ -87,5 +87,33 @@ echo "I went to the catch";
         return $this->json($user, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
     }
 
+
+    #[Route('/users/{id} ', name: 'delete_user', methods: ['DELETE'])]
+    public function deleteUser($id, Request $request): JsonResponse
+    {
+        try {
+        $user = $this->userServices->deleteUser($id);
+        } catch (Exception $e) {
+
+            if ($e instanceof UserValidationException) {
+                return $this->json($e->getMessage());
+            }
+            if ($e instanceof AddressValidationException) {
+                return $this->json($e->getMessage());
+            }
+            //tutaj mozna dodac kolejne user eception not found;
+            return $this->json('Unforseen Error Occurred!' . $e);
+        }
+
+        return $this->json($user, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
+    }
+
+    #[Route('/users/{id}/addresses/{addresType}', name: 'delete_address', methods: ['DELETE'])]
+    public function deleteAddress($id, $addresType): JsonResponse
+    {
+        $this->userServices->deleteAddress($id, $addresType);
+
+        return $this->json($addresType, 200, [], ['groups' => 'ADM']);
+    }
 
 }

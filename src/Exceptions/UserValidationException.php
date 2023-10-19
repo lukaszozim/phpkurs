@@ -12,8 +12,9 @@ class UserValidationException extends Exception
 
     public function __construct(string $message = '', int $code = 0, Throwable $previous = null)
     {
+
         $message = 'User Validation Failed! Sorry!';
-        parent::__construct($message, $code,$previous);
+        parent::__construct($message, $code, $previous);
     }
 
 

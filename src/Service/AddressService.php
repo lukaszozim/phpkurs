@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Entity\Address;
 use App\Repository\UserRepository;
 use App\Repository\AddressRepository;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
 
 class AddressService
@@ -14,19 +15,31 @@ class AddressService
 
     const AVAILABLE_ADDRESS_TYPES = ['PRIVATE', 'BUSINESS', 'CORRESPONDANCE'];
 
-    public function __construct(private readonly AddressRepository $addressRepository, private readonly UserRepository $userRepository)
+    public function __construct(private readonly AddressRepository $addressRepository, private readonly UserRepository $userRepository, private readonly Collection $currentAddresses, private readonly UserDTO $userDto)
     {
 
     }
 
 
-    public function updateAddress($newAddress, $currentAddress) : Address
+    private function updateMatchedAddress(array $newAddresses, Address $currentAddress): void
     {
-        //11. update address from update addressmethod in UserServices;
+        foreach ($newAddresses as $newAddress) {
+
+            if (strtolower($newAddress->type) === strtolower($currentAddress->getType())) {
+                $this->updateAddress($newAddress, $currentAddress);
+
+                break;
+            }
+        }
+    }
+
+
+    public function updateAddress($newAddress, Address $currentAddress) : Address
+    {
         $currentAddress
-            ->setCity($newAddress->City)
-            ->setZipCode($newAddress->ZipCode)
-            ->setStreet($newAddress->Street);
+                ->setCity($newAddress->City)
+                ->setZipCode($newAddress->ZipCode)
+                ->setStreet($newAddress->Street);
 
         $this->addressRepository->save($currentAddress);
 
@@ -35,9 +48,6 @@ class AddressService
 
     public function addNewAddress(array $newAddresses, User $user) : User
     {
-        // echo "i am adding a new address to the user..";
-        // print_r($newAddresses);
-
 
             foreach($newAddresses as $newAddress){
 
@@ -57,4 +67,49 @@ class AddressService
 
         return $user;
     }
+
+
+    private function addFreshAddresses($user, $userDto, $currentAddresses): User
+    {
+        if (count($currentAddresses) === 0) {
+            $this->addNewAddress($userDto->address, $user);
+        }
+        return $user;
+    }
+
+    private function updateExistingAddresses($userDto, $currentAddresses): void
+    {
+        foreach ($currentAddresses as $currentAddress) {
+
+            $this->updateMatchedAddress($userDto->address, $currentAddress);
+        }
+    }
+
+    private function addExtraAddresses($userDto, $user, $currentAddresses): void
+    {
+        $addressesToAdd = [];
+
+        foreach ($userDto->address as $newAddress) {
+            $exists = false;
+            foreach ($currentAddresses as $currentAddress) {
+                if ($newAddress->type === $currentAddress->getType()) {
+                    $exists = true;
+                }
+            }
+
+            if (!$exists) {
+                $addressesToAdd[] = $newAddress;
+            }
+        }
+
+        $this->addNewAddress($addressesToAdd, $user);
+    }
+
+    public function processNewAddresses(User $user, UserDTO $userDto, Collection $currentAddresses): void
+    {
+        $this->addFreshAddresses($user, $userDto, $currentAddresses);
+        $this->updateExistingAddresses($userDto, $currentAddresses);
+        $this->addExtraAddresses($userDto, $user, $currentAddresses);
+    }
+
 }

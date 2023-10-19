@@ -73,7 +73,7 @@ class UserController extends AbstractController
             $user = $this->userServices->updateUser($updatedUserDTO, $id);
 
         } catch(Exception $e) {
-
+echo "I went to the catch";
             if($e instanceof UserValidationException) {
                 return $this->json($e->getMessage());
             } 

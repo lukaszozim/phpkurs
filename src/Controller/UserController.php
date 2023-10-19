@@ -81,7 +81,7 @@ echo "I went to the catch";
                 return $this->json($e->getMessage());
             }
 //tutaj mozna dodac kolejne user eception not found;
-            return $this->json('Unforseen Error Occurred!');
+            return $this->json('Unforseen Error Occurred!'.$e);
         }
 
         return $this->json($user, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);

@@ -6,6 +6,7 @@ use App\DTO\UserDTO;
 use App\Entity\User;
 use App\Interfaces\UserCreationInterface;
 use App\Interfaces\UserCreatorStrategyInterface;
+use App\Vars\Roles;
 
 class UserCreationStrategyFactory {
 
@@ -22,33 +23,15 @@ class UserCreationStrategyFactory {
     {
 
         $strategy = match (true) {
+            Roles::analyzeEmail($this->userDto) && Roles::analyzePhoneNumber($this->userDto)    => new AdminUserStrategy(),
+            Roles::analyzeEmail($this->userDto) || Roles::analyzePhoneNumber($this->userDto)    => new VipUserStrategy(),
+            default                                                                             => new SimpleUserStrategy()
 
-            $this->isAdmin($this->userDto)          => new AdminUserStrategy(),
-            $this->userDto->phoneNumber === 666666  => new VipUserStrategy(),
-            default                                 => new SimpleUserStrategy()
         };
-
-
 
         return $strategy;
 
     }
 
-    
-
-
-    private function isAdmin($userDto): bool
-    {
-
-        $domain = explode('@', $userDto->email);
-
-        if ($domain[1] === 'gmail.com') {
-
-            return true;
-        } else {
-
-            return false;
-        }
-    }
 
 }

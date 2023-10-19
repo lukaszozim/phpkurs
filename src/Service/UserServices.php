@@ -15,6 +15,7 @@ use App\Interfaces\UserCreationInterface;
 use App\Exceptions\UserValidationException;
 use Symfony\Component\Serializer\Serializer;
 use App\Exceptions\AddressValidationException;
+use App\Vars\Roles;
 use Symfony\Component\HttpFoundation\Response;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Collections\Collection;
@@ -35,7 +36,6 @@ class UserServices
         readonly private UserRepository $userRepository, 
         readonly private UserCreationInterface $userCreator, 
         readonly private AddressRepository $addressRepository,
-        // readonly private AddressService $addressService,
         readonly private ValidatorInterface $validator)
     {
         
@@ -121,14 +121,18 @@ class UserServices
         $user->setFirstName($userDto->firstName);
         $user->setLastName($userDto->lastName);
 
+        // change role if the email has changed
+        //user can change email and this can affect the status.. but can't change the phone number. only phone number and email will give adm status
+        $user->setEmail($userDto->email);
+        var_dump($this->checkRole($userDto, $user));
+        $user->setRole($this->checkRole($userDto, $user));
 
-        //save and stop of there are no addresses in the request;
+        //save and stop if there are no addresses in the request;
         if(!$userDto->address) {
             $this->userRepository->save($user); 
 
             return $user;
         }
-
 
         $currentAddresses = $user->getAddresses();
 
@@ -141,6 +145,18 @@ class UserServices
 
         } 
     
+    public function checkRole($user) {
+
+        $role = match (true)
+        {
+            Roles::analyzeEmail($user) && Roles::analyzePhoneNumber($user) => 'ADM',
+            Roles::analyzeEmail($user) || Roles::analyzePhoneNumber($user) => 'VIP',
+            default                                                        => 'SIMPLE_USER'
+        };
+
+        return $role;
+
+    }
  
     private function validateData($data)
     {

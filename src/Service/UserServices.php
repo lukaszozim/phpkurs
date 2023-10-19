@@ -103,9 +103,18 @@ class UserServices
         return $user;
     } 
 
+    private function setAllowedFields(UserDTO $userDto, User $user)
+    {
+        $user->setFirstName($userDto->firstName);
+        $user->setLastName($userDto->lastName);
+        // change role if the email has changed->user can change email and this can affect the status.. but can't change the phone number. only phone number and email will give adm status
+        $user->setEmail($userDto->email);
+        $user->setRole($this->checkRole($user));
+
+    }
+
     public function updateUser(UserDTO $userDto, $id) : ?User
     {
-
         if ($this->validateData($userDto)) {
             throw new UserValidationException();
 
@@ -118,14 +127,7 @@ class UserServices
             return null;
         }
 
-        $user->setFirstName($userDto->firstName);
-        $user->setLastName($userDto->lastName);
-
-        // change role if the email has changed
-        //user can change email and this can affect the status.. but can't change the phone number. only phone number and email will give adm status
-        $user->setEmail($userDto->email);
-        var_dump($this->checkRole($userDto, $user));
-        $user->setRole($this->checkRole($userDto, $user));
+        $this->setAllowedFields($userDto, $user);
 
         //save and stop if there are no addresses in the request;
         if(!$userDto->address) {
@@ -148,12 +150,12 @@ class UserServices
     public function checkRole($user) {
 
         $role = match (true)
-        {
+        {   
             Roles::analyzeEmail($user) && Roles::analyzePhoneNumber($user) => 'ADM',
             Roles::analyzeEmail($user) || Roles::analyzePhoneNumber($user) => 'VIP',
             default                                                        => 'SIMPLE_USER'
         };
-
+        echo "checking role on update";
         return $role;
 
     }

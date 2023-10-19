@@ -48,12 +48,13 @@ class Roles {
         $stringNumber= '';
         if($userDto instanceof UserDTO) {
             $stringNumber = strval($userDto->phoneNumber);
+
         } elseif ($userDto instanceof User) {
+
             $stringNumber = strval($userDto->getPhoneNumber());
+            var_dump($stringNumber);
         }
 
-
-        $stringNumber = strval($userDto->phoneNumber);
         //if the number begins at 666 it is special role;
         if(intval(preg_match('/^666\d+$/', $stringNumber)))
         {

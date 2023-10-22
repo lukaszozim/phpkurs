@@ -4,10 +4,14 @@ namespace App\Controller;
 
 use App\DTO\UserDTO;
 use App\Entity\User;
+use App\Model\Hydra;
+use App\Service\HydraService;
 use App\Service\UserServices;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Normalizer;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -61,6 +65,29 @@ class UserController extends AbstractController
 
         return $this->userServices->getRoleBasedSerializedData($request, $user);
 
+    }
+
+    #[Route('/users/{page} ', name: 'create_user_pag', methods:['GET'])]
+    public function getUserWithPaginate(
+        int $page, UserRepository
+        $userRepository,
+        HydraService $service,
+        Request $request
+    ): JsonResponse
+    {
+        $params = $request->query->all();
+        $qb = $userRepository->getUsersQueryBuilder($params);
+        $adapter = new QueryAdapter($qb);
+        $pagerFanta = Pagerfanta::createForCurrentPageWithMaxPerPage($adapter, $page, 20);
+        $hydra = $service->transformToHydra(
+            $pagerFanta->getCurrentPageResults(),
+            $pagerFanta->getCurrentPage(),
+            $pagerFanta->hasNextPage() ?? $pagerFanta->getNextPage(),
+            $pagerFanta->hasPreviousPage() ?? $pagerFanta->getPreviousPage(),
+            $pagerFanta->count()
+        );
+
+        return $this->json($hydra,200);
     }
 
 }

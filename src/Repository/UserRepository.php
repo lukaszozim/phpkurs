@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -27,6 +28,17 @@ class UserRepository extends ServiceEntityRepository
         $this->getEntityManager()->flush($user);
 
         return $user;
+    }
+
+    public function getUsersQueryBuilder(array $params = []): QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('u');
+        if(isset($params['name'])) {
+            $qb->andWhere('u.first_name = :name')->setParameter('name', $params['name']);
+        }
+        $qb->orderBy('u.first_name', 'desc');
+
+        return $qb;
     }
 
 //    /**

@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\DTO\UserDTO;
 use App\Entity\User;
+use App\Entity\Address;
 use App\Repository\UserRepository;
 use App\Interfaces\UserCreatorStrategyInterface;
 
@@ -21,7 +22,22 @@ class SimpleUserStrategy implements UserCreatorStrategyInterface
         $user->setPassword((new PasswordHasher($userDto->password))->hashPassword());
         $user->setRole("SIMPLE_USER");
 
- 
+        if (isset($userDto->address)) {
+
+            foreach ($userDto->address as $addressDto) {
+                $address = new Address();
+                $address
+                    ->setUser($user)
+                    ->setZipCode($addressDto->ZipCode)
+                    ->setCity($addressDto->City)
+                    ->setType($addressDto->type)
+                    ->setStreet($addressDto->Street);
+
+                $user->addAddress($address);
+            }
+        }
+
+    
         return $user;
     }
 

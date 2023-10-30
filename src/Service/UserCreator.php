@@ -21,7 +21,7 @@ class UserCreator implements UserCreationInterface  {
 
     public function create(UserDTO $userDto) : User {
         
-        $user = $this->userCreatorStrategy->create($userDto);
+        $user = $this->userCreatorStrategy->create($userDto);  // $user = new VipUser()->create();
         $this->userRepository->save($user);
 
         return $user;

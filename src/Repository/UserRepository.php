@@ -3,8 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\User;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Entity\Address;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @extends ServiceEntityRepository<User>
@@ -22,11 +23,24 @@ class UserRepository extends ServiceEntityRepository
     }
 
     public function save(User $user) : User {
-
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush($user);
 
         return $user;
+    }
+
+    public function delete(User $user) : User {
+        $this->getEntityManager()->remove($user);
+        $this->getEntityManager()->flush();
+
+        return $user;
+    }
+
+    public function flushAddress(Address $address): Address
+    {
+        $this->getEntityManager()->flush();
+
+        return $address;
     }
 
 //    /**

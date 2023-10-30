@@ -1,0 +1,1 @@
+{"version":1,"defects":{"App\\tests\\Controller\\UserControllerTest::testGetAllUsersEndpoint":8,"App\\test\\Services\\UserServicesTest::testShowTheTest":8},"times":{"App\\tests\\Controller\\UserControllerTest::testGetAllUsersEndpoint":0.02,"App\\test\\Services\\UserServicesTest::testShowTheTest":0.004}}

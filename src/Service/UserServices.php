@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Service;
 
@@ -7,6 +8,7 @@ use App\DTO\UserDTO;
 use App\Entity\User;
 use App\DTO\AddressDTO;
 use App\Entity\Address;
+use App\Enum\AddressTypes;
 use App\Service\AddressService;
 use App\Repository\UserRepository;
 use Symfony\Config\SecurityConfig;
@@ -25,6 +27,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Uid\Uuid;
 
 class UserServices 
 {
@@ -119,19 +122,19 @@ class UserServices
         $this->validateData($userDto) && throw new UserValidationException();
 
         $user = $this->findUserById($id);
-        if (!$user) return null;
+        if (!$user) return null; //exception
         $this->setAllowedFields($userDto, $user);
 
         //save and stop if there are no addresses in the request;
-        if(!$userDto->address) return !$userDto->address ? $this->userRepository->save($user) : $user; 
-        $this->addressService->processNewAddresses($user, $userDto, $user->getAddresses());
+        if(!$userDto->address) return !$userDto->address ? $this->userRepository->save($user) : $user; //zwykly if
+        $this->addressService->processNewAddresses($user, $userDto);
         $this->userRepository->save($user);
 
         return $user;
 
         } 
 
-    public function deleteUser($id) : User|UserValidationException
+    public function deleteUser(Uuid $id) : User|UserValidationException
     {
         $user = $this->findUserById($id);
 
@@ -143,14 +146,16 @@ class UserServices
 
     }
 
-    public function deleteAddress($id, $addressType) 
+    public function deleteAddress(Uuid $id, string $addressType): void
     {
 
         $user = $this->getUserById($id);
-
+        $enum = AddressTypes::getType($addressType);
+        file_put_contents('log.php', print_r($enum, true)); // todo
         foreach ($user->getAddresses() as $address) {
+
             if (strtolower($address->getType()) === strtolower($addressType)) {
-                echo "I should remove the address";
+
                 $user->removeAddress($address);
             }
         }
@@ -167,7 +172,7 @@ class UserServices
             Roles::analyzeEmail($user) || Roles::analyzePhoneNumber($user) => 'VIP',
             default                                                        => 'SIMPLE_USER'
         };
-        echo "checking role on update";
+
         return $role;
 
     }

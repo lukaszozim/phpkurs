@@ -66,27 +66,27 @@ class AddressService
     }
 
 
-    private function addFreshAddresses($user, $userDto, $currentAddresses): void
+    private function addFreshAddresses($user, $userDto): void
     {
-        if (count($currentAddresses) === 0) {
+        if (count($user->getAddress()) === 0) {
             $this->addNewAddress($userDto->address, $user);
         }
 
     }
 
-    private function updateExistingAddresses($userDto, $currentAddresses): void
+    private function updateExistingAddresses($userDto, $user): void
     {
-        foreach ($currentAddresses as $currentAddress) {
+        foreach ($user->getAddress() as $currentAddress) {
             $this->updateMatchedAddress($userDto->address, $currentAddress);
         }
     }
 
-    private function addExtraAddresses($userDto, $user, $currentAddresses): void
+    private function addExtraAddresses($userDto, $user): void
     {
         $addressesToAdd = [];
         foreach ($userDto->address as $newAddress) {
             $exists = false;
-            foreach ($currentAddresses as $currentAddress) {
+            foreach ($user->getAddress() as $currentAddress) {
                 if ($newAddress->type === $currentAddress->getType()) {
                     $exists = true;
                 }
@@ -100,11 +100,11 @@ class AddressService
         $this->addNewAddress($addressesToAdd, $user);
     }
 
-    public function processNewAddresses(User $user, UserDTO $userDto, Collection $currentAddresses): void
+    public function processNewAddresses(User $user, UserDTO $userDto): void
     {
-        $this->addFreshAddresses($user, $userDto, $currentAddresses);
-        $this->updateExistingAddresses($userDto, $currentAddresses);
-        $this->addExtraAddresses($userDto, $user, $currentAddresses);
+        $this->addFreshAddresses($user, $userDto);
+        $this->updateExistingAddresses($userDto, $user);
+        $this->addExtraAddresses($userDto, $user);
     }
 
 }

@@ -46,7 +46,7 @@ class UserFixture extends Fixture
         $address = new Address();
 
         $address->setCity($faker->city);
-        $address->setType(array_rand(AddressTypes::getAllValues()));
+        $address->setType($this->generateRandomAddressType());
         $address->setZipCode($faker->postcode);
         $address->setStreet($faker->streetName);
         $address->setUser($user);
@@ -55,6 +55,11 @@ class UserFixture extends Fixture
 
         return $address;
 
+    }
+
+    private function generateRandomAddressType()
+    {
+        return AddressTypes::getAllValues()[array_rand(AddressTypes::getAllValues())]->name;
     }
 
 }

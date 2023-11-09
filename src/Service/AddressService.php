@@ -15,7 +15,10 @@ class AddressService
 
     const AVAILABLE_ADDRESS_TYPES = ['PRIVATE', 'BUSINESS', 'CORRESPONDANCE'];
 
-    public function __construct(private readonly AddressRepository $addressRepository, private readonly UserRepository $userRepository, private readonly UserDTO $userDto)
+    public function __construct(
+        private readonly AddressRepository $addressRepository,
+        private readonly UserRepository $userRepository,
+        private readonly UserDTO $userDto)
     {
 
     }
@@ -47,12 +50,11 @@ class AddressService
 
     public function addNewAddress(array $newAddresses, User $user) : User
     {
-
             foreach($newAddresses as $newAddress){
                 $address = new Address();
                 $address
                     ->setUser($user)
-                    ->setZipCode($newAddress->ZipCode)
+                    ->setZipCode($newAddress['ZipCode'])
                     ->setCity($newAddress->City)
                     ->setType($newAddress->type)
                     ->setStreet($newAddress->Street);
@@ -66,22 +68,24 @@ class AddressService
     }
 
 
-    private function addFreshAddresses($user, $userDto): void
+    private function addFreshAddresses(User $user, $userDto): self
     {
-        if (count($user->getAddress()) === 0) {
+        if (count($user->getAddresses() ) === 0) {
             $this->addNewAddress($userDto->address, $user);
         }
-
+        return $this;
     }
 
-    private function updateExistingAddresses($userDto, $user): void
+    private function updateExistingAddresses($userDto, $user): self
     {
         foreach ($user->getAddress() as $currentAddress) {
             $this->updateMatchedAddress($userDto->address, $currentAddress);
         }
+
+        return $this;
     }
 
-    private function addExtraAddresses($userDto, $user): void
+    private function addExtraAddresses($userDto, $user): self
     {
         $addressesToAdd = [];
         foreach ($userDto->address as $newAddress) {
@@ -98,13 +102,15 @@ class AddressService
         }
 
         $this->addNewAddress($addressesToAdd, $user);
+
+        return $this;
     }
 
     public function processNewAddresses(User $user, UserDTO $userDto): void
     {
-        $this->addFreshAddresses($user, $userDto);
-        $this->updateExistingAddresses($userDto, $user);
-        $this->addExtraAddresses($userDto, $user);
+        $this->addFreshAddresses($user, $userDto)
+            ->updateExistingAddresses($userDto, $user)
+            ->addExtraAddresses($userDto, $user);
     }
 
 }

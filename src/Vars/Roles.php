@@ -52,7 +52,7 @@ class Roles {
         } elseif ($userDto instanceof User) {
 
             $stringNumber = strval($userDto->getPhoneNumber());
-            var_dump($stringNumber);
+
         }
 
         //if the number begins at 666 it is special role;

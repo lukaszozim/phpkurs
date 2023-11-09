@@ -41,8 +41,8 @@ class UserDTO {
     public string $password = '';
 
     #[Type('array')]
-    /** @var array<AddressDTO>  */
-    public array $address;
+    /** @var $address array<AddressDTO>  */
+    public array $address = [];
 
 
 }

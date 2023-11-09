@@ -71,24 +71,23 @@ class UserServices
     }
 
     /**
-     * @param int $id
+     * @param Uuid $id
      * @return User|null
      */
-    public function getUserById ($id): ?User
+    public function getUserById (string $id): ?User
     {
     
         return $this->findUserById($id);
     }
 
     /**
-     * @param int $id
+     * @param Uuid $id
      * @return User|null
      */
-    private function findUserById($id): ?User
+    private function findUserById(string $id): ?User
     {
-        $user = $this->userRepository->find($id) ?? null;
+        return $this->userRepository->find($id) ?? null;
 
-        return $user;
     }
 
     public function createUser(UserDto $userDto) : User|Array 
@@ -107,7 +106,7 @@ class UserServices
         return $user;
     } 
 
-    private function setAllowedFields(UserDTO $userDto, User $user)
+    private function setAllowedFields(UserDTO $userDto, User $user) : void
     {
         $user->setFirstName($userDto->firstName);
         $user->setLastName($userDto->lastName);
@@ -117,7 +116,7 @@ class UserServices
 
     }
 
-    public function updateUser(UserDTO $userDto, $id) : ?User
+    public function updateUser(UserDTO $userDto, string $id) : ?User
     {
         $this->validateData($userDto) && throw new UserValidationException();
 
@@ -126,7 +125,11 @@ class UserServices
         $this->setAllowedFields($userDto, $user);
 
         //save and stop if there are no addresses in the request;
-        if(!$userDto->address) return !$userDto->address ? $this->userRepository->save($user) : $user; //zwykly if
+        if(!$userDto->address)
+        {
+            return $this->userRepository->save($user);
+        }
+        
         $this->addressService->processNewAddresses($user, $userDto);
         $this->userRepository->save($user);
 
@@ -166,20 +169,17 @@ class UserServices
 
     public function checkRole($user) {
 
-        $role = match (true)
+        return match (true)
         {   
             Roles::analyzeEmail($user) && Roles::analyzePhoneNumber($user) => 'ADM',
             Roles::analyzeEmail($user) || Roles::analyzePhoneNumber($user) => 'VIP',
             default                                                        => 'SIMPLE_USER'
         };
 
-        return $role;
-
     }
  
     private function validateData($data)
     {
-
         $errors = $this->validator->validate($data);
 
         if (count($errors) > 0) {
@@ -198,7 +198,7 @@ class UserServices
     }
 
 
-    public function getRoleBasedSerializedData($request, $data)
+    public function getRoleBasedSerializedData($request, $data): JsonResponse
     {
 
         $classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));

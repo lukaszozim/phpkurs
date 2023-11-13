@@ -1,23 +1,21 @@
 Array
 (
-    [0] => App\DTO\AddressDTO Object
+    [0] => App\Enum\AddressTypes Enum:string
         (
-            [City] => Kraków
-            [type] => BUSINESS
-            [Street] => Mostowa 12
-            [ZipCode] => 74-846
+            [name] => BUSINESS
+            [value] => BUSINESS
         )
 
-    [1] => App\DTO\AddressDTO Object
+    [1] => App\Enum\AddressTypes Enum:string
         (
-            [City] => Warsawa
-            [type] => PRIVATE
-            [Street] => Al Jerozolimskie 12
-            [ZipCode] => 74-846
+            [name] => PRIVATE
+            [value] => PRIVATE
         )
 
-)
-KoluszkiPrivate65PrivateArray
-(
-    [65] => Private
+    [2] => App\Enum\AddressTypes Enum:string
+        (
+            [name] => CORRESPONDENCE
+            [value] => CORRESPONDENCE
+        )
+
 )

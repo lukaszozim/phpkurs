@@ -6,9 +6,12 @@ namespace App\Service;
 use App\Exceptions\AddressRemovalException;
 use App\DTO\UserDTO;
 use App\Entity\User;
+use App\Exceptions\EntityRetrievalException;
 use App\Repository\UserRepository;
 use App\Interfaces\UserCreationInterface;
 use App\Exceptions\UserValidationException;
+use Ramsey\Uuid\Exception\InvalidUuidStringException;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Serializer\Serializer;
 use App\Vars\Roles;
 use Doctrine\Common\Annotations\AnnotationReader;
@@ -24,6 +27,9 @@ class UserServices
 
     /**
      * @param UserRepository $userRepository
+     * @param UserCreationInterface $userCreator
+     * @param AddressService $addressService
+     * @param ValidatorInterface $validator
      */
     public function __construct(
         readonly private UserRepository $userRepository, 
@@ -47,33 +53,56 @@ class UserServices
     }
 
     /**
-     * @return User[] Returns an array of User objects
-     */
-
-    /**
-     * @return array<User|null>
+     * @return array
+     * @throws EntityRetrievalException
      */
     public function getAllUsers(): array
     {
-        return $this->userRepository->findAll();
+        $users = $this->userRepository->findAll();
+
+        if(count($users) === 0) throw new EntityRetrievalException('There are no users in the database.', 404);
+
+        return $users;
     }
 
     /**
      * @param string $id
      * @return User|null
+     * @throws EntityRetrievalException
      */
     public function getUserById (string $id): ?User
     {
         return $this->findUserById($id);
+
     }
 
     /**
      * @param string $id
      * @return User|null
+     * @throws EntityRetrievalException
      */
     private function findUserById(string $id): ?User
     {
-        return $this->userRepository->find($id) ?? null;
+        $this->isValidUuid($id);
+        $user = $this->userRepository->find($id) ?? null;
+        if ($user === null ) throw new EntityRetrievalException('User could not be found', 400);
+        return $user;
+
+    }
+
+    /**
+     * @param string $uuid
+     * @return bool
+     * @throws EntityRetrievalException
+     */
+    public function isValidUuid(string $uuid): bool
+    {
+        try {
+            Uuid::fromString($uuid);
+        } catch (InvalidUuidStringException $e) {
+            throw new EntityRetrievalException('The provided user id is incorrect and will not be searched. '.$e->getMessage(), 400);
+        }
+        return true;
 
     }
 
@@ -114,6 +143,7 @@ class UserServices
      * @param UserDTO $userDto
      * @param string $id
      * @return User|null
+     * @throws EntityRetrievalException
      * @throws UserValidationException
      */
     public function updateUser(UserDTO $userDto, string $id) : ?User
@@ -140,6 +170,7 @@ class UserServices
     /**
      * @param $id
      * @return User|UserValidationException
+     * @throws EntityRetrievalException
      * @throws UserValidationException
      */
     public function deleteUser($id) : User|UserValidationException
@@ -152,6 +183,12 @@ class UserServices
         return $this->userRepository->delete($user);
     }
 
+    /**
+     * @param $id
+     * @param string $addressType
+     * @return bool
+     * @throws AddressRemovalException
+     */
     public function deleteAddress($id, string $addressType): bool
     {
         $user = $this->userRepository->find($id) ?? null;
@@ -164,6 +201,10 @@ class UserServices
         return $this->userRepository->deleteAddress($validatedAddress);
     }
 
+    /**
+     * @param $user
+     * @return string
+     */
     public function checkRole($user): string
     {
         return match (true)
@@ -174,7 +215,11 @@ class UserServices
         };
 
     }
- 
+
+    /**
+     * @param $data
+     * @return array|null
+     */
     private function validateData($data): array | null
     {
         $errors = $this->validator->validate($data);
@@ -193,7 +238,12 @@ class UserServices
         return null;
     }
 
-
+    /**
+     * @param $request
+     * @param $data
+     * @return JsonResponse
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
     public function getRoleBasedSerializedData($request, $data): JsonResponse
     {
         $classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));

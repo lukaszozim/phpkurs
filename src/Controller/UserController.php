@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Exceptions\AddressRemovalException;
+use App\Exceptions\EntityRetrievalException;
 use Exception;
 use App\Vars\Roles;
 use App\DTO\UserDTO;
@@ -11,6 +12,8 @@ use App\Exceptions\UserValidationException;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use App\Exceptions\AddressValidationException;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -34,28 +37,45 @@ class UserController extends AbstractController
     #[Route('/users', name: 'app_users', methods:["GET"])]
     public function index(Request $request): JsonResponse
     {
-        $users= $this->userServices->getAllUsers();
+        try {
+            $users= $this->userServices->getAllUsers();
 
-        $paginatedUsers = $this->paginator->paginate(
-            $users,
-            $request->query->getInt("page", 1),
-            3
-        );
+            $paginatedUsers = $this->paginator->paginate(
+                $users,
+                $request->query->getInt("page", 1),
+                3
+            );
 
-        return $this->json($paginatedUsers, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
+            return $this->json($paginatedUsers, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
+
+        }catch (Exception $e) {
+            if($e instanceof EntityRetrievalException) {
+                return new JsonResponse(['message' => ['message' => $e->getMessage(), 'code' => $e->getCode()]]);
+            }
+        }
+            return new JsonResponse('Jakas response');
     }
 
     /**
-     * @param Uuid $id
+     * @param string $id
      * @param Request $request
      * @return JsonResponse
      */
     #[Route('/users/{id}', name: 'app_user', methods: ["GET"])]
-    public function getUserById(Uuid $id, Request $request): JsonResponse
+    public function getUserById(string $id, Request $request): JsonResponse
     {
-        $user = $this->userServices->getUserById($id);
+        try {
+            $user = $this->userServices->getUserById($id);
+            return $this->json($user, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
 
-        return $this->json($user, 200, [], ['groups' => Roles::setRoleOnRequest($request)]);
+        } catch (Exception $e) {
+            if($e instanceof EntityRetrievalException) {
+                return new JsonResponse(['message' => ['message' => $e->getMessage(), 'code' => $e->getCode()]]);
+            }
+        }
+
+        return new JsonResponse('Unforeseen error occurred.', 400);
+
     }
 
     /**
@@ -66,7 +86,7 @@ class UserController extends AbstractController
     #[Route('/users ', name: 'create_user', methods: ['POST'])]
     public function createUser(Request $request, SerializerInterface $serializer): JsonResponse
     {
-
+//tutaj trycatch?/
         $userData = $serializer->deserialize($request->getContent(), UserDTO::class, "json");
         $user = $this->userServices->createUser($userData);
 

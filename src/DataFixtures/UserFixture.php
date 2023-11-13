@@ -60,6 +60,7 @@ class UserFixture extends Fixture
     private function generateRandomAddressType()
     {
         return AddressTypes::getAllValues()[array_rand(AddressTypes::getAllValues())]->name;
+
     }
 
 }

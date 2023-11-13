@@ -3,31 +3,21 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use Exception;
+use App\Exceptions\AddressRemovalException;
 use App\DTO\UserDTO;
 use App\Entity\User;
-use App\DTO\AddressDTO;
-use App\Entity\Address;
-use App\Enum\AddressTypes;
-use App\Service\AddressService;
 use App\Repository\UserRepository;
-use Symfony\Config\SecurityConfig;
-use App\Repository\AddressRepository;
 use App\Interfaces\UserCreationInterface;
 use App\Exceptions\UserValidationException;
 use Symfony\Component\Serializer\Serializer;
-use App\Exceptions\AddressValidationException;
 use App\Vars\Roles;
-use Symfony\Component\HttpFoundation\Response;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Uid\Uuid;
+
 
 class UserServices 
 {
@@ -38,7 +28,6 @@ class UserServices
     public function __construct(
         readonly private UserRepository $userRepository, 
         readonly private UserCreationInterface $userCreator, 
-        readonly private AddressRepository $addressRepository,
         readonly private AddressService $addressService,
         readonly private ValidatorInterface $validator)
     {
@@ -66,22 +55,20 @@ class UserServices
      */
     public function getAllUsers(): array
     {
-
         return $this->userRepository->findAll();
     }
 
     /**
-     * @param Uuid $id
+     * @param string $id
      * @return User|null
      */
     public function getUserById (string $id): ?User
     {
-    
         return $this->findUserById($id);
     }
 
     /**
-     * @param Uuid $id
+     * @param string $id
      * @return User|null
      */
     private function findUserById(string $id): ?User
@@ -90,85 +77,95 @@ class UserServices
 
     }
 
-    public function createUser(UserDto $userDto) : User|Array 
+    /**
+     * @param UserDTO $userDto
+     * @return User|array
+     */
+    public function createUser(UserDto $userDto) : User|array
     {
         
         if($this->validateData($userDto)) 
-        {   //return null; tak bylo ale wtedy wyrzucalo null w razie bledow 
+        {
             return $this->validateData($userDto);
         } 
 
         $user = new UserCreationStrategyFactory($userDto, $this->userCreator);
         $this->userCreator->setStrategy($user->createUserStrategy());
 
-        $user = $this->userCreator->create($userDto, $this->userRepository);
+        return $this->userCreator->create($userDto);
 
-        return $user;
-    } 
+    }
 
-    private function setAllowedFields(UserDTO $userDto, User $user) : void
+    /**
+     * @param UserDTO $userDto
+     * @param User $user
+     * @return void
+     */
+    private function setAllowedUpdateFields(UserDTO $userDto, User $user) : void
     {
         $user->setFirstName($userDto->firstName);
         $user->setLastName($userDto->lastName);
-        // change role if the email has changed->user can change email and this can affect the status.. but can't change the phone number. only phone number and email will give adm status
         $user->setEmail($userDto->email);
         $user->setRole($this->checkRole($user));
 
     }
 
+    /**
+     * @param UserDTO $userDto
+     * @param string $id
+     * @return User|null
+     * @throws UserValidationException
+     */
     public function updateUser(UserDTO $userDto, string $id) : ?User
     {
-        $this->validateData($userDto) && throw new UserValidationException();
+        if($this->validateData($userDto))  throw new UserValidationException();
 
         $user = $this->findUserById($id);
         if (!$user) return null; //exception
-        $this->setAllowedFields($userDto, $user);
+
+        $this->setAllowedUpdateFields($userDto, $user);
 
         //save and stop if there are no addresses in the request;
-        if(!$userDto->address)
-        {
+        if(!$userDto->address) {
             return $this->userRepository->save($user);
         }
-        
+
         $this->addressService->processNewAddresses($user, $userDto);
         $this->userRepository->save($user);
 
         return $user;
 
-        } 
+        }
 
-    public function deleteUser(Uuid $id) : User|UserValidationException
+    /**
+     * @param $id
+     * @return User|UserValidationException
+     * @throws UserValidationException
+     */
+    public function deleteUser($id) : User|UserValidationException
     {
         $user = $this->findUserById($id);
-
         if(!$user) {
             throw new UserValidationException('User not found', 404);
         }
-        
-        return $this->userRepository->delete($user);
 
+        return $this->userRepository->delete($user);
     }
 
-    public function deleteAddress(Uuid $id, string $addressType): void
+    public function deleteAddress($id, string $addressType): bool
     {
+        $user = $this->userRepository->find($id) ?? null;
+        $validatedAddress = $this->addressService->validateAddressType($addressType, $user->getAddresses());
 
-        $user = $this->getUserById($id);
-        $enum = AddressTypes::getType($addressType);
-        file_put_contents('log.php', print_r($enum, true)); // todo
-        foreach ($user->getAddresses() as $address) {
-
-            if (strtolower($address->getType()) === strtolower($addressType)) {
-
-                $user->removeAddress($address);
-            }
+        if($validatedAddress  === null) {
+            throw new AddressRemovalException();
         }
 
-        $this->userRepository->flushAddress($address);
-
+        return $this->userRepository->deleteAddress($validatedAddress);
     }
 
-    public function checkRole($user) {
-
+    public function checkRole($user): string
+    {
         return match (true)
         {   
             Roles::analyzeEmail($user) && Roles::analyzePhoneNumber($user) => 'ADM',
@@ -178,20 +175,19 @@ class UserServices
 
     }
  
-    private function validateData($data)
+    private function validateData($data): array | null
     {
         $errors = $this->validator->validate($data);
-
         if (count($errors) > 0) {
 
-            $errorsString = [];
+            $errorsArray = [];
             foreach ($errors as $error) {
                 $propertyPath = $error->getPropertyPath();
                 $message = $error->getMessage();
-                $errorsString[] = "$propertyPath: $message";
+                $errorsArray[] = "$propertyPath: $message";
             }
 
-            return $errorsString;
+            return $errorsArray;
         } 
 
         return null;
@@ -200,19 +196,16 @@ class UserServices
 
     public function getRoleBasedSerializedData($request, $data): JsonResponse
     {
-
         $classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
         $normalizer = new ObjectNormalizer($classMetadataFactory);
         $serializer = new Serializer([$normalizer]);
 
         $data = match(true) {
-            $request->headers->get('auth') === 'vip'    => $data = $serializer->normalize($data, null, ['groups' => 'vip']),
-            $request->headers->get('auth') === 'adm'    => $data = $serializer->normalize($data, null, ['groups' => 'adm']),
-            default                                     => $data = $serializer->normalize($data, null, ['groups' => 'read'])
+            $request->headers->get('auth') === 'vip'    => $serializer->normalize($data, null, ['groups' => 'vip']),
+            $request->headers->get('auth') === 'adm'    => $serializer->normalize($data, null, ['groups' => 'adm']),
+            default                                     => $serializer->normalize($data, null, ['groups' => 'read'])
         };
 
         return new JsonResponse($data);
-
     }
-
 }

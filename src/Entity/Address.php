@@ -12,6 +12,7 @@ class Address
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['adm', 'vip'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]

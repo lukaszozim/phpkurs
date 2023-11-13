@@ -6,6 +6,8 @@ use App\Entity\User;
 use App\Entity\Address;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Exception;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * @extends ServiceEntityRepository<User>
@@ -36,12 +38,26 @@ class UserRepository extends ServiceEntityRepository
         return $user;
     }
 
-    public function flushAddress(Address $address): Address
+    public function deleteAddress(Address $address): bool
     {
+        $this->getEntityManager()->remove($address);
         $this->getEntityManager()->flush();
+        // Check if the address is still in the database after deletion attempt
+        $addressStillExists = $this->getEntityManager()->contains($address);
 
-        return $address;
+        if ($addressStillExists) {
+            return false;
+        }
+
+            return true;
     }
+
+//    public function flushAddress(Address $address): Address
+//    {
+//        $this->getEntityManager()->flush();
+//
+//        return $address;
+//    }
 
 //    /**
 //     * @return User[] Returns an array of User objects

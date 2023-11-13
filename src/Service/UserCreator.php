@@ -13,8 +13,8 @@ class UserCreator implements UserCreationInterface  {
 
     private UserCreatorStrategyInterface $userCreatorStrategy;
 
-    public function __construct(private readonly UserRepository $userRepository) {
-
+    public function __construct(private readonly UserRepository $userRepository)
+    {
 
     }
 
@@ -31,14 +31,11 @@ class UserCreator implements UserCreationInterface  {
 
     public function setStrategy(UserCreatorStrategyInterface $strategy) : void 
     {
-        
         $this->userCreatorStrategy = $strategy;
-
     }
 
     public function getStrategy() : UserCreatorStrategyInterface 
     {
-
         return $this->userCreatorStrategy;
     }
 

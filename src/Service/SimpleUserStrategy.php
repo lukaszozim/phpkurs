@@ -14,7 +14,7 @@ class SimpleUserStrategy implements UserCreatorStrategyInterface
     public function create(UserDTO $userDto) : User
     {
 
-        $user = new User($userDto);
+        $user = new User();
         $user->setFirstName($userDto->firstName);
         $user->setLastName($userDto->lastName);
         $user->setEmail($userDto->email);
@@ -23,15 +23,16 @@ class SimpleUserStrategy implements UserCreatorStrategyInterface
         $user->setRole("SIMPLE_USER");
 
         if (isset($userDto->address)) {
-
+//dd($userDto->address);
             foreach ($userDto->address as $addressDto) {
                 $address = new Address();
+//                dd($addressDto);
                 $address
                     ->setUser($user)
-                    ->setZipCode($addressDto->ZipCode)
-                    ->setCity($addressDto->City)
-                    ->setType($addressDto->type)
-                    ->setStreet($addressDto->Street);
+                    ->setZipCode($addressDto['ZipCode'])
+                    ->setCity($addressDto['City'])
+                    ->setType($addressDto['type'])
+                    ->setStreet($addressDto['Street']);
 
                 $user->addAddress($address);
             }

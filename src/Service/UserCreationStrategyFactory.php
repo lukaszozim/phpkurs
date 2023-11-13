@@ -22,14 +22,12 @@ class UserCreationStrategyFactory {
     public function createUserStrategy () : UserCreatorStrategyInterface
     {
 
-        $strategy = match (true) {
+        return match (true) {
             Roles::analyzeEmail($this->userDto) && Roles::analyzePhoneNumber($this->userDto)    => new AdminUserStrategy(),
             Roles::analyzeEmail($this->userDto) || Roles::analyzePhoneNumber($this->userDto)    => new VipUserStrategy(),
             default                                                                             => new SimpleUserStrategy()
 
         };
-
-        return $strategy;
 
     }
 

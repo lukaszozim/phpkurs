@@ -27,10 +27,10 @@ class VipUserStrategy implements UserCreatorStrategyInterface
                 $address = new Address();
                 $address
                     ->setUser($user)
-                    ->setZipCode($addressDto->ZipCode)
-                    ->setCity($addressDto->City)
-                    ->setType($addressDto->type)
-                    ->setStreet($addressDto->Street);
+                    ->setZipCode($addressDto['ZipCode'])
+                    ->setCity($addressDto['City'])
+                    ->setType($addressDto['type'])
+                    ->setStreet($addressDto['Street']);
 
                 $user->addAddress($address);
             }
